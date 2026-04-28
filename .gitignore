@@ -4,7 +4,6 @@ out
 *.log*
 nul
 !/node_modules_update/**/dist
-package-lock.json
 
 # Log file
 *.log

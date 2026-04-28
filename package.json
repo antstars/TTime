@@ -19,6 +19,7 @@
     "build:win:portable": "npm run modules-update && npm run build && node scripts/clean-windows-dist.js && electron-builder --win --dir --config && node scripts/build-windows-portable.js",
     "build:mac": "npm run modules-update && npm run build && electron-builder --mac --config",
     "build:linux": "npm run modules-update && npm run build && electron-builder --linux --config",
+    "build:linux:ci": "npm run modules-update && npm run build && electron-builder --linux AppImage deb --config",
     "npm-i-extend-modules-update": "npm i && npm run modules-update",
     "modules-update": "node modules-update.ts"
   },
@@ -39,7 +40,7 @@
     "node-screenshots": "^0.1.1",
     "onnxruntime-node": "^1.13.1",
     "opencv.js": "^1.2.1",
-    "sqlite3": "^5.1.6",
+    "sqlite3": "5.1.6",
     "tencentcloud-sdk-nodejs-ocr": "^4.0.632",
     "tencentcloud-sdk-nodejs-tmt": "^4.0.589",
     "tslib": "^2.5.0",
