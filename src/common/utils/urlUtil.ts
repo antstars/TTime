@@ -3,7 +3,9 @@
  *
  * @param url 地址
  */
-export function parseCustomProtocolUrl(url): { path; queryParams } {
+export function parseCustomProtocolUrl(
+  url
+): { path: string; queryParams: Record<string, string> } | null {
   // 使用正则表达式来解析URL中的所有查询参数键值对
   const queryString = url.split('?')[1]
   if (queryString) {
@@ -11,7 +13,7 @@ export function parseCustomProtocolUrl(url): { path; queryParams } {
     if (path.startsWith('/')) {
       path = path.substring(1) // 去掉开头的斜杠
     }
-    const queryParams = {}
+    const queryParams: Record<string, string> = {}
     const params = queryString.split('&')
     params.forEach((param) => {
       const [key, value] = param.split('=')

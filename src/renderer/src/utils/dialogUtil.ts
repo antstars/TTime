@@ -1,7 +1,7 @@
 /**
  * dialog 设置窗口样式更新
  */
-export const dialogSetWinHandleStyle = (className: string) => {
+export const dialogSetWinHandleStyle = (className: string): void => {
   setTimeout(() => {
     // 使用这种方式 否则多个弹层时 会收到影响
     const el = document.querySelector('.' + className).parentNode.parentNode

@@ -173,13 +173,15 @@ export class OcrServiceBuilder {
   }
 }
 
-// 获取所有翻译源配置信息 此处是异步加载 所以直接写在这里了 没有构建在方法 / 类中
-const channelConfigModules = import.meta.glob('../../../common/channel/ocr/info/*.ts')
+// 获取所有 OCR 源配置信息。这里改为 eager 导入，避免设置页入口依赖 top-level await
+const channelConfigModules = import.meta.glob('../../../common/channel/ocr/info/*.ts', {
+  eager: true
+}) as Record<string, { default: any }>
 // 构建翻译语言
 for (const modulePath in channelConfigModules) {
   const moduleName = modulePath.split('/').pop().split('.')[0]
   const channelCode = moduleName.charAt(0).toUpperCase() + moduleName.slice(1).replace('Info', '')
-  const module = (await channelConfigModules[modulePath]()) as { default }
+  const module = channelConfigModules[modulePath]
   const infoList = module.default
   OcrServiceBuilder.ocrServiceConfigInfoMap.set(channelCode, infoList)
 }

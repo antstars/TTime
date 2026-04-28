@@ -7,22 +7,22 @@ class TranslateServiceRecordVo {
   /**
    * 翻译服务类型
    */
-  translateServiceType: string
+  translateServiceType!: string
 
   /**
    * 翻译服务Id
    */
-  translateServiceId: string
+  translateServiceId!: string
 
   /**
    * 翻译状态
    */
-  translateStatus: boolean
+  translateStatus!: boolean
 
   /**
    * 翻译结果内容
    */
-  translateVo: TranslateVo
+  translateVo!: TranslateVo
 }
 
 export default TranslateServiceRecordVo

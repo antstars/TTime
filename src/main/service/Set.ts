@@ -11,17 +11,46 @@ import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import { StoreTypeEnum } from '../../common/enums/StoreTypeEnum'
 import StoreService from './StoreService'
 import { StoreConfigFunTypeEnum } from '../../common/enums/StoreConfigFunTypeEnum'
-import TTimeAuth from './auth/TTimeAuth'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions
 import { ecDictDbClose } from './channel/interfaces/EcDictRequest'
 
 let nullWin: BrowserWindow
 
 let setWin: BrowserWindow
+let isSetWinReady = false
+
+function showSetWindow(): void {
+  log.debug('[设置窗口] 尝试显示窗口')
+  if (isNull(setWin) || setWin.isDestroyed()) {
+    log.warn('[设置窗口] 窗口为空或已销毁, 无法显示')
+    return
+  }
+  if (setWin.isMinimized()) {
+    log.debug('[设置窗口] 窗口已最小化, 正在恢复')
+    setWin.restore()
+  }
+  log.debug('[设置窗口] 执行 show(), moveTop(), focus()')
+  log.debug('[设置窗口] 窗口状态: isVisible=', setWin.isVisible(), ', isMinimized=', setWin.isMinimized(), ', isFocused=', setWin.isFocused())
+  log.debug('[设置窗口] 窗口位置: ', JSON.stringify(setWin.getBounds()))
+  setWin.show()
+  setWin.moveTop()
+  setWin.focus()
+  log.debug('[设置窗口] 窗口显示完成, isVisible=', setWin.isVisible(), ', isFocused=', setWin.isFocused())
+}
 
 function createSetWindow(): void {
-  if (null != setWin) {
-    setWin.show()
+  log.debug('[设置窗口] 开始创建窗口')
+  if (isNotNull(setWin) && !setWin.isDestroyed()) {
+    log.debug('[设置窗口] 窗口已存在, isSetWinReady: ', isSetWinReady)
+    if (isSetWinReady) {
+      showSetWindow()
+    } else {
+      setWin.once('ready-to-show', () => {
+        log.debug('[设置窗口] ready-to-show 事件触发')
+        isSetWinReady = true
+        showSetWindow()
+      })
+    }
     return
   }
 
@@ -31,16 +60,20 @@ function createSetWindow(): void {
   let setWinConfig: BrowserWindowConstructorOptions = {
     width: 850,
     height: 600,
-    // 关闭阴影效果 否则设置了窗口透明清空下 透明处会显示阴影效果
-    hasShadow: false,
+    // Windows 下透明窗口偶发只显示空白/不可见，设置页改为非透明窗口渲染更稳定
+    hasShadow: isMac,
     // 设置窗口透明
-    transparent: true,
-    // 设置窗口透明色
-    backgroundColor: '#0000',
+    transparent: isMac,
+    // 设置窗口背景色
+    backgroundColor: isMac ? '#0000' : '#F7F7F7',
     // 去除窗口边框
     frame: false,
     // 可调整大小
     resizable: false,
+    // 默认不显示，等页面就绪后统一显示
+    show: false,
+    // 首次创建时居中显示，避免 Windows 打包版窗口不可见
+    center: true,
     title: 'TTime设置',
     // 设置任务栏图标
     icon: path.join(__dirname, '../../public/icon-1024x1024.png'),
@@ -56,8 +89,6 @@ function createSetWindow(): void {
     // 部分Win系统中加入配置可能存在不兼容问题 导致窗口显示时会出现黑阴影
     setWinConfig = {
       ...setWinConfig,
-      // 默认不显示窗口
-      show: false,
       // Mac 环境下设置窗口中的关闭按钮使用 Mac 原生的红绿灯
       titleBarStyle: SystemTypeEnum.isMac() ? 'hidden' : 'default',
       // 自定义macOS上的红绿灯位置
@@ -66,11 +97,10 @@ function createSetWindow(): void {
   }
 
   setWin = new BrowserWindow(setWinConfig)
+  log.debug('[设置窗口] BrowserWindow 创建完成, ID: ', setWin.id)
   // 禁用按下F11全屏事件
   setWin.setFullScreenable(false)
   GlobalWin.setSetWin(setWin)
-
-  TTimeAuth.refresh()
 
   /**
    * 窗口显示时触发事件
@@ -79,18 +109,122 @@ function createSetWindow(): void {
     setWin.webContents.send('win-show-event')
   })
 
-  if (isMac) {
-    // Mac环境下才在窗口加载完毕后显示 此处为了兼容显示窗口红绿灯
-    // 部分Win系统中加入配置可能存在不兼容问题 导致窗口显示时会出现黑阴影
-    setWin.on('ready-to-show', () => {
-      setWin.show()
-    })
-  }
+  setWin.webContents.on(
+    'did-fail-load',
+    (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      log.error(
+        '[设置窗口] 页面加载失败 errorCode=',
+        errorCode,
+        ' errorDescription=',
+        errorDescription,
+        ' validatedURL=',
+        validatedURL,
+        ' isMainFrame=',
+        isMainFrame
+      )
+    }
+  )
+
+  setWin.webContents.on('render-process-gone', (_event, details) => {
+    log.error('[设置窗口] 渲染进程退出 details=', JSON.stringify(details))
+  })
+
+  setWin.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    if (level < 2 && !message.includes('[Vue warn]') && !message.includes('[设置窗口异常]')) {
+      return
+    }
+    log.error(
+      '[设置窗口] 控制台消息 level=',
+      level,
+      ' message=',
+      message,
+      ' line=',
+      line,
+      ' sourceId=',
+      sourceId
+    )
+  })
+
+  // 所有平台都在窗口加载完毕后统一显示，避免 Windows 打包版只出任务栏图标不出窗口
+  setWin.on('ready-to-show', () => {
+    log.debug('[设置窗口] ready-to-show 事件触发 (主监听器)')
+    isSetWinReady = true
+    showSetWindow()
+  })
+
+  setWin.webContents.on('did-finish-load', () => {
+    log.debug('[设置窗口] did-finish-load 事件触发')
+    setTimeout(() => {
+      if (isNull(setWin) || setWin.isDestroyed()) {
+        return
+      }
+      setWin.webContents
+        .executeJavaScript(`(() => {
+          const app = document.getElementById('app')
+          return {
+            title: document.title,
+            readyState: document.readyState,
+            bodyClassName: document.body ? document.body.className : '',
+            htmlClassName: document.documentElement ? document.documentElement.className : '',
+            appExists: !!app,
+            appChildElementCount: app ? app.childElementCount : -1,
+            appInnerHtmlLength: app && app.innerHTML ? app.innerHTML.length : 0,
+            bodyInnerTextLength: document.body && document.body.innerText ? document.body.innerText.length : 0,
+            bodyInnerTextPreview: document.body && document.body.innerText ? document.body.innerText.slice(0, 200) : ''
+          }
+        })()`)
+        .then((domInfo) => {
+          log.debug('[设置窗口] DOM自检信息: ', JSON.stringify(domInfo))
+          if (!domInfo.appExists || domInfo.appChildElementCount > 0) {
+            return
+          }
+          setWin.webContents
+            .executeJavaScript(`(async () => {
+              const moduleScript = document.querySelector('script[type="module"][src]')
+              if (!moduleScript || !moduleScript.src) {
+                return {
+                  ok: false,
+                  reason: 'module-script-not-found'
+                }
+              }
+              try {
+                await import(moduleScript.src)
+                const app = document.getElementById('app')
+                return {
+                  ok: true,
+                  moduleSrc: moduleScript.src,
+                  appChildElementCount: app ? app.childElementCount : -1,
+                  appInnerHtmlLength: app && app.innerHTML ? app.innerHTML.length : 0,
+                  bodyInnerTextLength: document.body && document.body.innerText ? document.body.innerText.length : 0
+                }
+              } catch (error) {
+                return {
+                  ok: false,
+                  moduleSrc: moduleScript.src,
+                  message: error && error.message ? error.message : String(error),
+                  stack: error && error.stack ? error.stack : ''
+                }
+              }
+            })()`)
+            .then((retryInfo) => {
+              log.debug('[设置窗口] 入口脚本重试结果: ', JSON.stringify(retryInfo))
+            })
+            .catch((err) => {
+              log.error('[设置窗口] 入口脚本重试异常: ', err)
+            })
+        })
+        .catch((err) => {
+          log.error('[设置窗口] DOM自检异常: ', err)
+        })
+    }, 500)
+  })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     setWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/set.html`)
   } else {
-    setWin.loadFile(path.join(__dirname, '../renderer/set.html'))
+    const htmlPath = path.join(__dirname, '../renderer/set.html')
+    log.debug('[设置窗口] 生产模式, 加载文件: ', htmlPath)
+    setWin.loadFile(htmlPath)
   }
 
   // 当 window 被关闭，这个事件会被触发。
@@ -98,6 +232,7 @@ function createSetWindow(): void {
     // 取消引用 window 对象，如果你的应用支持    多窗口的话，
     // 通常会把多个 window 对象存放在一个数组里面，
     // 与此同时，你应该删除相应的元素。
+    isSetWinReady = false
     setWin = nullWin
     GlobalWin.setSetWin(null)
   })
@@ -134,7 +269,9 @@ ipcMain.on('update-translate-shortcutKey-event', (event, type, oldShortcutKey, s
  * 关闭设置窗口事件
  */
 ipcMain.handle('close-set-win-event', (_event, _args) => {
-  setWin.close()
+  if (isNotNull(setWin) && !setWin.isDestroyed()) {
+    setWin.close()
+  }
 })
 
 /**

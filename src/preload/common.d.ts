@@ -13,6 +13,5 @@ declare global {
     cacheSet
     cacheDelete
     textWriteShearPlateEvent
-    logoutEvent
   }
 }

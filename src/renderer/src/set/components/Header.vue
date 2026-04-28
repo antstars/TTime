@@ -1,5 +1,5 @@
 <template>
-  <div class='header'>
+  <div class='header' :class="{ 'header-windows': isWindows }">
     <div class='function-tools-block'>
       <div class='function-tools-category'></div>
       <div class='function-tools-category'>
@@ -14,6 +14,8 @@
  * 关闭窗口
  */
 import { SystemTypeEnum } from '../../enums/SystemTypeEnum'
+
+const isWindows = SystemTypeEnum.getSystemType() === SystemTypeEnum.WIN
 
 const closeWin = (): void => {
   window.api.closeSetWinEvent()
@@ -39,5 +41,9 @@ const isMac = (): boolean => {
     display: flex;
     justify-content: space-between;
   }
+}
+
+.header-windows {
+  margin-top: 0;
 }
 </style>

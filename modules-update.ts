@@ -14,12 +14,16 @@ copy(UPDATE_NODE_MODULES, NODE_MODULES)
  * @param {string} target 复制到指定的目录、文件
  * @param {string} filterFn 每次复制前，都会经过一次filterFn，若返回true，则复制。
  */
-function copy(origin, target, filterFn = (origin, target) => true) {
+function copy(
+  origin: string,
+  target: string,
+  filterFn = (_origin: string, _target: string): boolean => true
+): void {
   if (fs.statSync(origin).isDirectory()) {
     if (!fs.existsSync(target)) {
       fs.mkdirSync(target)
     }
-    fs.readdirSync(origin).forEach(originName => {
+    fs.readdirSync(origin).forEach((originName) => {
       const originFilePath = path.resolve(origin, originName)
       const targetFilePath = path.resolve(target, originName)
       copy(originFilePath, targetFilePath, filterFn)

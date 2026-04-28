@@ -15,7 +15,13 @@ class AliyunChannel implements ITranslateInterface {
   apiTranslate(info): void {
     AliyunRequest.apiTranslate(info).then(
       (response) => {
-        const body = response.body
+        const body = (response.body ?? {}) as {
+          code?: string | number
+          data?: {
+            translated?: string
+          }
+          message?: string
+        }
         log.info('[阿里云翻译事件] - 响应报文 : ', body)
         const code = body.code
         let data = ''
@@ -52,7 +58,10 @@ class AliyunChannel implements ITranslateInterface {
   apiTranslateCheck(info): void {
     AliyunRequest.apiTranslate(info).then(
       (response) => {
-        const body = response.body
+        const body = (response.body ?? {}) as {
+          code?: string | number
+          message?: string
+        }
         log.info('[阿里云翻译校验密钥事件] - 响应报文 : ', response)
         const code = body.code
         if (code === 200) {

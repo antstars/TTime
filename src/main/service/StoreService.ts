@@ -5,16 +5,15 @@ import TranslateShowPositionEnum from '../../common/enums/TranslateShowPositionE
 import { YesNoEnum } from '../../common/enums/YesNoEnum'
 import { PlaySpeechServiceEnum } from '../../common/enums/PlaySpeechServiceEnum'
 import { ShortcutKeyEnum } from '../../common/enums/ShortcutKeyEnum'
-import { isNotNull, isNull } from '../../common/utils/validate'
+import { isNull } from '../../common/utils/validate'
 import { GlobalShortcutEvent } from './GlobalShortcutEvent'
 import { WinEvent } from './Win'
 import log from '../utils/log'
 import GlobalWin from './GlobalWin'
-import { LoginStatusEnum } from '../../common/enums/LoginStatusEnum'
-import TTimeRequest from './channel/interfaces/TTimeRequest'
-import MemberUtil from '../utils/memberUtil'
-import commonUtil from '../utils/commonUtil'
 import * as fse from 'fs-extra'
+import TranslateServiceEnum from '../../common/enums/TranslateServiceEnum'
+import ServiceConfig from '../../common/class/ServiceConfig'
+import OpenAIInfo from '../../common/channel/translate/info/OpenAIInfo'
 
 /**
  * app.getPath('userData')
@@ -24,6 +23,27 @@ import * as fse from 'fs-extra'
  * Win : C:\Users\用户账号名称\AppData\Roaming\time-translate/
  */
 class StoreService {
+  static defaultSetPageMenuIndex = 'basiInfo'
+  static validSetPageMenuIndexList = [
+    StoreService.defaultSetPageMenuIndex,
+    'advancedInfo',
+    'shortcutKey',
+    'translateHistory',
+    'translateServiceConfig',
+    'networkSet',
+    'configFile',
+    'about'
+  ]
+  static builtInTranslateServiceTypeList = [
+    TranslateServiceEnum.TTIME,
+    TranslateServiceEnum.BING,
+    TranslateServiceEnum.BING_DICT,
+    TranslateServiceEnum.GOOGLE_BUILT_IN,
+    TranslateServiceEnum.DEEP_L_BUILT_IN,
+    TranslateServiceEnum.NIU_TRANS_BUILT_IN,
+    TranslateServiceEnum.TRAN_SMART,
+    TranslateServiceEnum.EC_DICT
+  ]
   /**
    * 用户数据默认路径
    */
@@ -48,30 +68,6 @@ class StoreService {
    * 用户数据存放文件夹名称
    */
   static userDataConfigFolderName = 'userDataConfig'
-
-  /**
-   * 云配置不上传白名单 - 不应同步的配置
-   */
-  static cloudConfigKeyWhiteList: Array<string> = [
-    'inputShortcutKey',
-    'screenshotShortcutKey',
-    'choiceShortcutKey',
-    'showOcrShortcutKey',
-    'screenshotOcrShortcutKey',
-    'screenshotSilenceOcrShortcutKey',
-    'agentConfig',
-    'translateChoiceDelay',
-    'inputLanguage',
-    'resultLanguage',
-    'loginStatus',
-    'translateServiceMap',
-    'ocrServiceMap',
-    'translateServiceKey',
-    'token',
-    'userInfo',
-    'mainWinWidth',
-    'setPageMenuIndex'
-  ]
 
   /**
    * 配置路径
@@ -136,6 +132,8 @@ class StoreService {
   }
 
   static initConfig = (): void => {
+    StoreService.normalizeSetPageMenuIndex()
+    StoreService.normalizeTranslateServiceMap()
     // 首次打开时设置默认快捷键
     if (!StoreService.configHas('inputShortcutKey')) {
       StoreService.configSet('inputShortcutKey', 'Alt + Q')
@@ -173,9 +171,9 @@ class StoreService {
       })
     }
 
-    // 初始化自动更新事件
-    if (!StoreService.configHas('autoUpdater')) {
-      StoreService.configSet('autoUpdater', YesNoEnum.Y)
+    // 清理已移除的自动更新配置
+    if (StoreService.configHas('autoUpdater')) {
+      StoreService.configDeleteByKey('autoUpdater')
     }
     // 语音播放源
     if (!StoreService.configHas('playSpeechService')) {
@@ -236,14 +234,6 @@ class StoreService {
     if (!StoreService.configHas('inputTranslationAutoStatus')) {
       StoreService.configSet('inputTranslationAutoStatus', YesNoEnum.N)
     }
-    // 初始化登录状态
-    if (!StoreService.configHas('loginStatus')) {
-      StoreService.configSet('loginStatus', LoginStatusEnum.N)
-    }
-    // 初始化服务端口
-    if (!StoreService.configHas('servicePort')) {
-      StoreService.configSet('servicePort', 11223)
-    }
     // 隐藏翻译输入框
     if (!StoreService.configHas('hideTranslateInput')) {
       StoreService.configSet('hideTranslateInput', YesNoEnum.N)
@@ -254,11 +244,11 @@ class StoreService {
     }
     // 翻译结果显示复制驼峰格式按钮
     if (!StoreService.configHas('copyCamelCaseResultStatus')) {
-      StoreService.configSet('copyCamelCaseResultStatus', LoginStatusEnum.N)
+      StoreService.configSet('copyCamelCaseResultStatus', YesNoEnum.N)
     }
     // 翻译结果显示复制下划线格式按钮
     if (!StoreService.configHas('copySnakeCaseResultStatus')) {
-      StoreService.configSet('copySnakeCaseResultStatus', LoginStatusEnum.N)
+      StoreService.configSet('copySnakeCaseResultStatus', YesNoEnum.N)
     }
     app.whenReady().then(async () => {
       const translateShortcutKeyList = [
@@ -320,58 +310,81 @@ class StoreService {
     })
   }
 
-  /**
-   * 加载云端配置
-   */
-  static initCloudConfig = (): void => {
-    if (MemberUtil.isNotMemberVip()) {
+  static normalizeSetPageMenuIndex = (): void => {
+    if (!StoreService.configHas('setPageMenuIndex')) {
       return
     }
-    log.info('[ 加载云端配置 ] - 开始')
-    // 本地配置对象
-    const thisConfigObject = StoreService.configStore.store
-    // 获取本地配置对象对应键列表
-    const thisConfigKeyList = Object.keys(thisConfigObject).filter(
-      (key) => !StoreService.cloudConfigKeyWhiteList.includes(key)
-    )
-    // 拉取所有最新配置
-    TTimeRequest.getUserConfig().then((res: any): void => {
-      if (res['status'] !== 200) {
-        log.info('[ 加载云端配置 ] - 登录已失效')
-        TTimeRequest.logout().then()
+    const setPageMenuIndex = StoreService.configGet('setPageMenuIndex')
+    if (setPageMenuIndex === 'myInfo') {
+      StoreService.configSetNotCloud(
+        'setPageMenuIndex',
+        StoreService.defaultSetPageMenuIndex
+      )
+      return
+    }
+    if (!StoreService.validSetPageMenuIndexList.includes(setPageMenuIndex)) {
+      StoreService.configDeleteByKey('setPageMenuIndex')
+    }
+  }
+
+  static isBuiltInTranslateService = (type: string): boolean => {
+    return StoreService.builtInTranslateServiceTypeList.includes(type)
+  }
+
+  static createDefaultOpenAITranslateService = (): any => {
+    return ServiceConfig.buildKeyService({
+      type: TranslateServiceEnum.OPEN_AI,
+      ...OpenAIInfo.defaultInfo
+    })
+  }
+
+  static normalizeTranslateServiceMap = (): void => {
+    if (!StoreService.configHas('translateServiceMap')) {
+      const defaultOpenAITranslateService = StoreService.createDefaultOpenAITranslateService()
+      StoreService.configSetNotCloud('translateServiceMap', [
+        [defaultOpenAITranslateService.id, { ...defaultOpenAITranslateService, index: 0 }]
+      ])
+      return
+    }
+
+    const translateServiceMapCache = StoreService.configGet('translateServiceMap')
+    const translateServiceMap = new Map(Array.isArray(translateServiceMapCache) ? translateServiceMapCache : [])
+    const normalizedTranslateServiceMap = new Map()
+
+    translateServiceMap.forEach((translateServiceRaw, key) => {
+      const translateService: any = translateServiceRaw
+      if (isNull(translateService) || typeof translateService !== 'object') {
         return
       }
-      // 云端配置 转换为对象格式
-      const cloudConfigObject = res.data.reduce((acc: any, cur: any) => {
-        acc[cur.configKey] = cur.configValue
-        return acc
-      }, {})
-      // 云端配置 key 列表
-      const cloudConfigKeyList = Object.keys(cloudConfigObject)
-      // 筛选本地存在 云端不存在的配置
-      const newConfigKeyList = thisConfigKeyList.filter((key) => !cloudConfigKeyList.includes(key))
-      // 构建本地存在云端不存在的数据
-      const newConfigList = newConfigKeyList.map((key) => ({
-        configKey: key,
-        configValue: thisConfigObject?.[key] ?? null
-      }))
-      if (isNotNull(newConfigList) && newConfigList.length > 0) {
-        log.info('[ 加载云端配置 ] - 更新配置信息开始')
-        // 保存新配置数据
-        TTimeRequest.batchSaveUserConfig({
-          configList: newConfigList
-        }).then()
-        log.info('[ 加载云端配置 ] - 更新配置信息结束')
+      const type =
+        translateService.type === 'PAPAGO' ? TranslateServiceEnum.PAPAGO : translateService.type
+      if (isNull(type) || StoreService.isBuiltInTranslateService(type)) {
+        return
       }
-      // 云端配置覆盖本地配置
-      cloudConfigKeyList.forEach((key) => {
-        const value = cloudConfigObject[key]
-        if (isNotNull(value)) {
-          StoreService.configSetNotCloud(key, commonUtil.convertToNumber(value))
-        }
+      const serviceId = isNull(translateService.id) ? key : translateService.id
+      normalizedTranslateServiceMap.set(serviceId, {
+        ...translateService,
+        id: serviceId,
+        type
       })
     })
-    log.info('[ 加载云端配置 ] - 结束')
+
+    if (normalizedTranslateServiceMap.size === 0) {
+      const defaultOpenAITranslateService = StoreService.createDefaultOpenAITranslateService()
+      normalizedTranslateServiceMap.set(defaultOpenAITranslateService.id, defaultOpenAITranslateService)
+    }
+
+    let index = 0
+    normalizedTranslateServiceMap.forEach((translateService) => {
+      translateService.index = index
+      delete translateService.serviceInfo
+      index++
+    })
+
+    StoreService.configSetNotCloud(
+      'translateServiceMap',
+      Array.from(normalizedTranslateServiceMap.entries())
+    )
   }
 
   static systemHas = (key: string): boolean => {
@@ -404,12 +417,6 @@ class StoreService {
 
   static configSet = (key: string, val: any): void => {
     StoreService.configSetNotCloud(key, val)
-    if (MemberUtil.isMemberVip() && !StoreService.cloudConfigKeyWhiteList.includes(key)) {
-      TTimeRequest.saveUserConfig({
-        configKey: key,
-        configValue: val
-      }).then()
-    }
   }
 
   static configDeleteByKey = (key: string): void => {

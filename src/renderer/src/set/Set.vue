@@ -1,14 +1,11 @@
 <template>
-  <div class="block">
+  <div class="block" :class="{ 'block-windows': isWindows }">
     <Header />
 
     <el-container style="height: 554px">
       <el-aside width="200px">
         <el-scrollbar>
           <el-menu :default-active="menuIndex" @select="menuSelect">
-            <el-menu-item index="myInfo">
-              <span class="none-select">我的</span>
-            </el-menu-item>
             <el-menu-item index="basiInfo">
               <span class="none-select">偏好设置</span>
             </el-menu-item>
@@ -40,7 +37,6 @@
       <el-container>
         <el-main class="main">
           <el-scrollbar>
-            <my-info v-if="menuIndex === 'myInfo'" />
             <basi-info v-if="menuIndex === 'basiInfo'" />
             <advanced-info v-else-if="menuIndex === 'advancedInfo'" />
             <shortcut-key v-else-if="menuIndex === 'shortcutKey'" />
@@ -58,7 +54,6 @@
 
 <script lang="ts" setup>
 import Header from './components/Header.vue'
-import MyInfo from './components/fun/MyInfo.vue'
 import BasiInfo from './components/fun/BasiInfo.vue'
 import AdvancedInfo from './components/fun/AdvancedInfo.vue'
 import ShortcutKey from './components/fun/ShortcutKey.vue'
@@ -71,6 +66,27 @@ import About from './components/fun/About.vue'
 import { ref } from 'vue'
 import { cacheDelete, cacheGet } from '../utils/cacheUtil'
 import { isNull } from '../../../common/utils/validate'
+import { SystemTypeEnum } from '../enums/SystemTypeEnum'
+
+const defaultPageMenuIndex = 'basiInfo'
+const isWindows = SystemTypeEnum.getSystemType() === SystemTypeEnum.WIN
+const validPageMenuIndexList = [
+  defaultPageMenuIndex,
+  'advancedInfo',
+  'shortcutKey',
+  'translateHistory',
+  'translateServiceConfig',
+  'networkSet',
+  'configFile',
+  'about'
+]
+
+const normalizePageMenuIndex = (pageMenuIndex): string => {
+  if (pageMenuIndex === 'myInfo') {
+    return defaultPageMenuIndex
+  }
+  return validPageMenuIndexList.includes(pageMenuIndex) ? pageMenuIndex : defaultPageMenuIndex
+}
 
 /**
  * 设置页面菜单索引
@@ -80,8 +96,8 @@ const getPageMenuIndex = (): string => {
   const setPageMenuIndex = cacheGet('setPageMenuIndex')
   // 读取后缓存数据
   cacheDelete('setPageMenuIndex')
-  // 如果菜单索引为空则默认展示偏好设置
-  return isNull(setPageMenuIndex) ? 'myInfo' : setPageMenuIndex
+  // 如果菜单索引为空或已失效则默认展示偏好设置
+  return isNull(setPageMenuIndex) ? defaultPageMenuIndex : normalizePageMenuIndex(setPageMenuIndex)
 }
 
 /**
@@ -101,11 +117,12 @@ const menuSelect = (index): void => {
 // 窗口显示事件 当窗口显示时触发
 window.api.winShowEvent(() => {
   const setPageMenuIndex = cacheGet('setPageMenuIndex')
-  if(isNull(setPageMenuIndex)) {
+  if (isNull(setPageMenuIndex)) {
     return
   }
   // 设置页面菜单索引
-  menuSelect(getPageMenuIndex())
+  cacheDelete('setPageMenuIndex')
+  menuSelect(normalizePageMenuIndex(setPageMenuIndex))
 })
 </script>
 
@@ -124,6 +141,14 @@ window.api.winShowEvent(() => {
   .menu-icon {
     margin-right: 10px;
   }
+}
+
+.block-windows {
+  margin-left: 0;
+  margin-right: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
 }
 
 // 设置宽度不完全百分百 否则内容会和滚动条重叠

@@ -102,7 +102,7 @@ const props = defineProps<{
 
 const translateServiceRecordVoThis = ref(props.translateServiceRecordVo)
 
-const serviceInfo = ref(
+const serviceInfo = ref<any>(
   TranslateServiceBuilder.getInfoByService(translateServiceRecordVoThis.value.translateServiceType)
 )
 
@@ -120,7 +120,18 @@ watch(
 
 // 翻译结果
 const translatedResultContent = ref('')
-const dictTranslatedResultExpand = ref({})
+const dictTranslatedResultExpand = ref<any>({
+  isUs: false,
+  isUk: false,
+  isExplainList: false,
+  isWfs: false,
+  usPhonetic: '',
+  ukPhonetic: '',
+  usSpeech: '',
+  ukSpeech: '',
+  explainList: [],
+  wfsList: []
+})
 // 是否正在加载翻译结果
 const isResultLoading = ref(false)
 // 显示翻译结果

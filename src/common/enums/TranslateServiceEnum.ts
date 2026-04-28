@@ -8,11 +8,6 @@ class TranslateServiceEnum {
   static TTIME = 'TTime'
 
   /**
-   * TTimeAI翻译
-   */
-  static TTIME_AI = 'TTimeAI'
-
-  /**
    * 腾讯翻译君
    */
   static TENCENT_CLOUD = 'TencentCloud'

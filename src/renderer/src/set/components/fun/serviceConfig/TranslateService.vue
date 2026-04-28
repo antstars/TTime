@@ -17,7 +17,7 @@
                 :class='{ active: translateServiceThis.id === element.id }'
                 @click='selectTranslateService(element)'
               >
-                <a class='translate-service-block none-select translate-service-expansion-block'>
+                <div class='translate-service-expansion-block'>
                   <div class='left'>
                     <img
                       class='translate-service-logo none-select'
@@ -33,7 +33,7 @@
                       @change='serviceUseStatusChange(element)'
                     />
                   </div>
-                </a>
+                </div>
               </li>
             </template>
           </draggable>
@@ -67,8 +67,6 @@
           </div>
         </el-tooltip>
 
-        <vip-info-service-buttons :service-type='ServiceTypeEnum.TRANSLATE' />
-
       </div>
     </div>
     <div class='translate-service-set-block'>
@@ -90,10 +88,34 @@
             <el-input
               v-model='translateServiceThis.requestUrl'
               type='text'
-              placeholder='https://api.openai.com'
+              placeholder='https://api.openai.com/v1'
               spellcheck='false'
             />
-            <span class='form-switch-span'> 留空默认：https://api.openai.com </span>
+            <span class='form-switch-span'>
+              留空默认：https://api.openai.com/v1，仅替换末尾 /chat/completions 或 /responses
+            </span>
+          </el-form-item>
+          <el-form-item
+            v-if='translateServiceThis.type === TranslateServiceEnum.OPEN_AI'
+            label='请求协议'
+          >
+            <el-select v-model='translateServiceThis.requestProtocol' size='small'>
+              <el-option
+                v-for='protocol in openAIProtocolList'
+                :key='protocol.value'
+                :label='protocol.label'
+                :value='protocol.value'
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item
+            v-if='
+              translateServiceThis.type === TranslateServiceEnum.OPEN_AI &&
+              translateServiceThis.requestProtocol === OpenAIProtocolEnum.CHAT_COMPLETIONS_THINKING
+            '
+            label='思考开关'
+          >
+            <el-switch v-model='translateServiceThis.enableThinking' />
           </el-form-item>
           <el-form-item
             v-if='
@@ -102,12 +124,49 @@
             '
             label='模型'
           >
-            <el-select v-model='translateServiceThis.model' size='small'>
+            <el-input
+              v-model='translateServiceThis.model'
+              type='text'
+              placeholder='请输入模型，例如 gpt-4o-mini'
+              spellcheck='false'
+            />
+            <span class='form-switch-span'> 不再内置默认模型，留空后请自行填写 </span>
+          </el-form-item>
+          <el-form-item
+            v-if='isOpenAITranslateService(translateServiceThis.type)'
+            label='源语言'
+          >
+            <el-select
+              v-model='translateServiceThis.inputLanguageType'
+              clearable
+              filterable
+              placeholder='留空则跟随主窗口'
+              size='small'
+            >
               <el-option
-                v-for='model in openAIModelList'
-                :key='model.value'
-                :label='model.label'
-                :value='model.value'
+                v-for='language in getTranslateLanguageList(translateServiceThis.type)'
+                :key='language.languageType'
+                :label='language.languageName'
+                :value='language.languageType'
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item
+            v-if='isOpenAITranslateService(translateServiceThis.type)'
+            label='目标语言'
+          >
+            <el-select
+              v-model='translateServiceThis.languageResultTypeCustom'
+              clearable
+              filterable
+              placeholder='留空则跟随主窗口'
+              size='small'
+            >
+              <el-option
+                v-for='language in getTranslateLanguageList(translateServiceThis.type)'
+                :key='language.languageType'
+                :label='language.languageName'
+                :value='language.languageType'
               />
             </el-select>
           </el-form-item>
@@ -155,16 +214,21 @@
 
           <div class='translate-service-set-fun'>
             <div class='translate-service-use-text'>
-              <el-tag v-if='checkIngStatus' type='info' effect='dark'> 验证中...</el-tag>
-              <el-tag v-else-if='translateServiceThis.checkStatus' type='success' effect='dark'
-              >验证成功
-              </el-tag>
-              <el-tag v-else-if='!translateServiceThis.checkStatus' type='warning' effect='dark'
-              >待验证
+              <el-tag
+                class='translate-service-status-tag'
+                :type='translateServiceStatusTag.type'
+                effect='dark'
+              >
+                {{ translateServiceStatusTag.text }}
               </el-tag>
             </div>
-            <el-button plain :disabled='checkIngStatus' @click='translateServiceCheckAndSave'
-            >验证
+            <el-button
+              class='translate-service-check-button'
+              plain
+              :disabled='checkIngStatus'
+              @click='translateServiceCheckAndSave'
+            >
+              验证
             </el-button>
           </div>
           <span class='form-switch-span'> 验证成功后将会保存配置信息 </span>
@@ -199,7 +263,7 @@
   </div>
 </template>
 <script setup lang='ts'>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import draggable from 'vuedraggable'
 import { Minus, Plus } from '@element-plus/icons-vue'
 
@@ -214,15 +278,33 @@ import TranslateServiceEnum from '../../../../../../common/enums/TranslateServic
 import ElMessageExtend from '../../../../utils/messageExtend'
 import { REnum } from '../../../../enums/REnum'
 import { OpenAIModelEnum } from '../../../../../../common/enums/OpenAIModelEnum'
-import { loadNewServiceInfo, saveServiceInfoHandle } from '../../../../utils/memberUtil'
-import VipInfoServiceButtons from './vip/VipInfoServiceButtons.vue'
-import { ServiceTypeEnum } from '../../../../../../common/enums/ServiceTypeEnum'
+import { OpenAIProtocolEnum } from '../../../../../../common/enums/OpenAIProtocolEnum'
+import { normalizeOpenAIRequestUrlPrefix } from '../../../../channel/OpenAIProtocolUtil'
 
 // 翻译服务验证状态
 const checkIngStatus = ref(false)
 
+const translateServiceStatusTag = computed(() => {
+  if (checkIngStatus.value) {
+    return {
+      type: 'info',
+      text: '验证中...'
+    }
+  }
+  if (translateServiceThis.value?.checkStatus) {
+    return {
+      type: 'success',
+      text: '验证成功'
+    }
+  }
+  return {
+    type: 'warning',
+    text: '待验证'
+  }
+})
+
 // 可添加的翻译源列表 先把 values 格式转换为数组
-const translateServiceSelectMenuListTemp = Array.from(
+const translateServiceSelectMenuListTemp: any[] = Array.from(
   TranslateServiceBuilder.getServiceList().values()
 )
 // 这里获取翻译源对应的内置翻译源状态
@@ -246,12 +328,37 @@ for (let i = 1; i < translateServiceSelectMenuListTemp.length; i++) {
 // 获取缓存中的翻译服务list
 const translateServiceSelectMenuList = ref(translateServiceSelectMenuListTemp)
 
-const openAIModelList = OpenAIModelEnum.MODEL_LIST
+const openAIProtocolList = OpenAIProtocolEnum.PROTOCOL_LIST
+
+const isOpenAITranslateService = (type: string): boolean => {
+  return (
+    type === TranslateServiceEnum.OPEN_AI || type === TranslateServiceEnum.AZURE_OPEN_AI
+  )
+}
+
+const getTranslateLanguageList = (type: string): any[] => {
+  return TranslateServiceBuilder.getServiceConfigInfo(type)?.languageList || []
+}
+
+const updateTranslateServiceBinding = (): void => {
+  const latestTranslateServiceMap = getTranslateServiceMap()
+  translateServiceMap.value = latestTranslateServiceMap
+  translateServiceList.value = [...latestTranslateServiceMap.values()]
+  if (translateServiceThis.value && latestTranslateServiceMap.has(translateServiceThis.value.id)) {
+    translateServiceThis.value = latestTranslateServiceMap.get(translateServiceThis.value.id)
+    return
+  }
+  selectOneServiceThis()
+}
 
 /**
  * 设置当前选中项默认为第一个翻译服务
  */
 const selectOneServiceThis = (): void => {
+  if (translateServiceMap.value.size === 0) {
+    translateServiceThis.value = null
+    return
+  }
   translateServiceThis.value = translateServiceMap.value.get(
     translateServiceMap.value.entries().next().value[0]
   )
@@ -283,26 +390,13 @@ const selectTranslateService = (translateService: any): void => {
  * @param type 翻译类型
  */
 const addTranslateService = (type: string): void => {
-  const insideTranslateServiceMap = getTranslateServiceMap()
-  for (const translateService of insideTranslateServiceMap.values()) {
-    // 如果已经添加了内置服务 则不允许重复添加
-    if (
-      !TranslateServiceBuilder.getServiceConfigInfo(type).isKey &&
-      type === translateService.type
-    ) {
-      ElMessageExtend.warning('此服务已存在了，请勿重复添加')
-      return
-    }
-  }
-  const service = buildTranslateService(type)
+  const service: any = buildTranslateService(type)
   if (null !== service) {
     saveService(service)
     translateServiceThis.value = service
   }
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.TRANSLATE)
 }
 
 /**
@@ -310,19 +404,11 @@ const addTranslateService = (type: string): void => {
  */
 const deleteTranslateService = (): void => {
   const insideTranslateServiceMap = getTranslateServiceMap()
-  if (insideTranslateServiceMap.size <= 1) {
-    return ElMessageExtend.warning('不能删除所有翻译源')
-  }
   insideTranslateServiceMap.delete(translateServiceThis.value.id)
   setTranslateServiceMap(insideTranslateServiceMap)
-  // 更新页面绑定翻译服务数据
-  updateThisServiceMap(insideTranslateServiceMap)
-  // 设置当前选中项默认为第一个翻译服务
-  selectOneServiceThis()
+  updateTranslateServiceBinding()
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.TRANSLATE)
 }
 
 /**
@@ -338,15 +424,14 @@ const translateServiceCheckAndSave = (): void => {
   ) {
     return ElMessageExtend.warning('请输入密钥信息后再进行验证')
   }
+  if (isOpenAITranslateService(value.type) && isNull(value.model)) {
+    return ElMessageExtend.warning('请输入模型后再进行验证')
+  }
   if (TranslateServiceEnum.OPEN_AI === value.type) {
     if (isNotUrl(value.requestUrl)) {
       value.requestUrl = OpenAIModelEnum.REQUEST_URL
     } else {
-      // 检查尾部的斜杠
-      if (value.requestUrl.endsWith('/')) {
-        // 移除尾部的斜杠
-        value.requestUrl = value.requestUrl.slice(0, -1)
-      }
+      value.requestUrl = normalizeOpenAIRequestUrlPrefix(value.requestUrl)
     }
   }
 
@@ -372,8 +457,12 @@ const translateServiceCheckAndSave = (): void => {
 window.api.apiCheckTranslateCallbackEvent((type, res) => {
   // 关闭翻译服务验证加载状态
   checkIngStatus.value = false
-  let useStatus: boolean
-  let checkStatus: boolean
+  if (isNull(res) || isNull(res.data)) {
+    ElMessageExtend.warning('验证失败，请检查密钥是否可用')
+    return
+  }
+  let useStatus = false
+  let checkStatus = false
   if (res.code === REnum.SUCCESS) {
     useStatus = true
     checkStatus = true
@@ -382,10 +471,21 @@ window.api.apiCheckTranslateCallbackEvent((type, res) => {
     useStatus = false
     checkStatus = false
     ElMessageExtend.warning(res.msg !== '' ? res.msg : '验证失败，请检查密钥是否可用')
+  } else {
+    ElMessageExtend.warning('验证失败，请检查密钥是否可用')
+    return
   }
   const insideTranslateServiceMap = getTranslateServiceMap()
   const data = res.data
+  if (isNull(data.id)) {
+    ElMessageExtend.warning('验证失败，请重新选择翻译源后再试')
+    return
+  }
   const insideTranslateService = insideTranslateServiceMap.get(data.id)
+  if (isNull(insideTranslateService)) {
+    ElMessageExtend.warning('验证失败，未找到对应翻译源配置')
+    return
+  }
   insideTranslateService.useStatus = useStatus
   insideTranslateService.checkStatus = checkStatus
   insideTranslateService.appId = data.appId
@@ -404,13 +504,11 @@ window.api.apiCheckTranslateCallbackEvent((type, res) => {
     serviceCloseOtherSameTypesInUse(insideTranslateService)
   }
   saveService(insideTranslateService)
-  if (translateServiceThis.value.id === insideTranslateService.id) {
+  if (translateServiceThis.value?.id === insideTranslateService.id) {
     translateServiceThis.value = insideTranslateService
   }
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.TRANSLATE)
 })
 
 /**
@@ -429,8 +527,6 @@ const serviceUseStatusChange = (translateService): void => {
   saveService(translateService)
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.TRANSLATE)
 }
 
 /**
@@ -442,6 +538,7 @@ const serviceCloseOtherSameTypesInUse = (translateService): void => {
   for (const insideTranslateService of getTranslateServiceMap().values()) {
     if (
       insideTranslateService.type === translateService.type &&
+      insideTranslateService.id !== translateService.id &&
       insideTranslateService.useStatus &&
       translateService.useStatus
     ) {
@@ -461,8 +558,7 @@ const saveService = (translateService): void => {
   const insideTranslateServiceMap = getTranslateServiceMap()
   insideTranslateServiceMap.set(translateService.id, translateService)
   setTranslateServiceMap(insideTranslateServiceMap)
-  // 更新页面绑定翻译服务数据
-  updateThisServiceMap(insideTranslateServiceMap)
+  updateTranslateServiceBinding()
 }
 
 /**
@@ -484,8 +580,6 @@ const serviceSortDragChange = (event): void => {
   updateThisServiceMap(swappedMap)
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.TRANSLATE)
 }
 
 /**
@@ -506,22 +600,7 @@ const serviceNameInput = (): void => {
   saveService(translateServiceThis.value)
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.TRANSLATE)
 }
-
-/**
- * 刷新服务信息事件
- */
-window.api.refreshServiceInfoEvent(() => {
-  updateThisServiceMap(getTranslateServiceMap())
-  // 设置当前选中项默认为第一个服务
-  selectOneServiceThis()
-  // 更新翻译源通知
-  window.api.updateTranslateServiceNotify()
-})
-
-loadNewServiceInfo()
 
 </script>
 
@@ -564,11 +643,15 @@ loadNewServiceInfo()
         border-radius: 8px;
         display: flex;
         align-items: center;
-        justify-content: space-around;
+        overflow: hidden;
 
         .translate-service-expansion-block {
           display: flex;
           justify-content: space-between;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          padding: 0 14px;
         }
 
         &:hover.translate-service-block:not(.active) {
@@ -619,12 +702,26 @@ loadNewServiceInfo()
 
       .translate-service-set-fun {
         display: flex;
-        justify-content: space-between;
         align-items: center;
 
         .translate-service-use-text {
+          display: flex;
+          align-items: center;
+          min-width: 96px;
+          flex: 0 0 96px;
           font-size: 14px;
           padding-right: 10px;
+
+          :deep(.translate-service-status-tag) {
+            width: 86px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+
+        .translate-service-check-button {
+          margin-left: auto;
         }
       }
 

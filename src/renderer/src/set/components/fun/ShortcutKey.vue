@@ -133,7 +133,7 @@ const translateShortcutKeySetEvent = (event, type): void => {
     return
   }
   // 优化显示格式
-  shortcutKey = shortcutKey.replaceAll('+', ' + ')
+  shortcutKey = shortcutKey.replace(/\+/g, ' + ')
   window.api.updateTranslateShortcutKeyEvent(type, oldShortcutKey, shortcutKey, (res) => {
     if (res.code === -1) {
       ElMessageExtend.error(res.msg)

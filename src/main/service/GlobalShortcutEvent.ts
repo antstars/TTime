@@ -255,7 +255,7 @@ class GlobalShortcutEvent {
     }
   }
 
-  static getSelectedText = async () => {
+  static getSelectedText = async (): Promise<string> => {
     const translateChoiceDelay = Math.floor(StoreService.configGet('translateChoiceDelay') / 2)
     GlobalWin.mainWinSend('clear-all-translated-content')
     const currentClipboardContent = clipboard.readText()

@@ -17,9 +17,7 @@
                 :class='{ active: ocrServiceThis.id === element.id }'
                 @click='selectService(element)'
               >
-                <a
-                  class='translate-service-block cursor-pointer none-select translate-service-expansion-block'
-                >
+                <div class='translate-service-expansion-block'>
                   <div class='left'>
                     <img class='translate-service-logo' :src='element.serviceInfo.logo' />
                     <span class='translate-service-name'>{{ element.serviceInfo.name }}</span>
@@ -30,7 +28,7 @@
                       @change='serviceUseStatusChange(element)'
                     />
                   </div>
-                </a>
+                </div>
               </li>
             </template>
           </draggable>
@@ -63,8 +61,6 @@
             <el-button :icon='Minus' size='small' @click='deleteService' />
           </div>
         </el-tooltip>
-
-        <vip-info-service-buttons :service-type='ServiceTypeEnum.OCR' />
 
       </div>
     </div>
@@ -185,15 +181,20 @@
           </el-form-item>
           <div class='translate-service-set-fun'>
             <div class='translate-service-use-text'>
-              <el-tag v-if='checkIngStatus' type='info' effect='dark'> 验证中...</el-tag>
-              <el-tag v-else-if='ocrServiceThis.checkStatus' type='success' effect='dark'>
-                验证成功
-              </el-tag>
-              <el-tag v-else-if='!ocrServiceThis.checkStatus' type='warning' effect='dark'>
-                待验证
+              <el-tag
+                class='translate-service-status-tag'
+                :type='ocrServiceStatusTag.type'
+                effect='dark'
+              >
+                {{ ocrServiceStatusTag.text }}
               </el-tag>
             </div>
-            <el-button plain :disabled='checkIngStatus' @click='serviceCheckAndSave'>
+            <el-button
+              class='translate-service-check-button'
+              plain
+              :disabled='checkIngStatus'
+              @click='serviceCheckAndSave'
+            >
               验证
             </el-button>
           </div>
@@ -205,7 +206,7 @@
   </div>
 </template>
 <script setup lang='ts'>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { Minus, Plus } from '@element-plus/icons-vue'
 
 import {
@@ -225,14 +226,30 @@ import { OcrSpaceModelEnum } from '../../../../../../common/enums/OcrSpaceModelE
 import { TencentCloudOcrLanguageEnum } from '../../../../../../common/enums/TencentCloudOcrLanguageEnum'
 import { TencentCloudImageOcrLanguageEnum } from '../../../../../../common/enums/TencentCloudImageOcrLanguageEnum'
 import { BaiduImageOcrLanguageEnum } from '../../../../../../common/enums/BaiduImageOcrLanguageEnum'
-import { loadNewServiceInfo, saveServiceInfoHandle } from '../../../../utils/memberUtil'
-import { ServiceTypeEnum } from '../../../../../../common/enums/ServiceTypeEnum'
-import VipInfoServiceButtons from './vip/VipInfoServiceButtons.vue'
 
 // Ocr服务验证状态
 const checkIngStatus = ref(false)
+
+const ocrServiceStatusTag = computed(() => {
+  if (checkIngStatus.value) {
+    return {
+      type: 'info',
+      text: '验证中...'
+    }
+  }
+  if (ocrServiceThis.value?.checkStatus) {
+    return {
+      type: 'success',
+      text: '验证成功'
+    }
+  }
+  return {
+    type: 'warning',
+    text: '待验证'
+  }
+})
 // 可添加的翻译源列表 先把 values 格式转换为数组
-const ocrServiceSelectMenuListTemp = Array.from(OcrServiceBuilder.getServiceList().values())
+const ocrServiceSelectMenuListTemp: any[] = Array.from(OcrServiceBuilder.getServiceList().values())
 // 这里获取翻译源对应的内置翻译源状态
 ocrServiceSelectMenuListTemp.forEach((service) => {
   service['isBuiltIn'] = buildOcrService(service.type)?.['isBuiltIn']
@@ -267,11 +284,11 @@ const selectOneServiceThis = (): void => {
 }
 
 // 获取缓存中的Ocr服务list
-const ocrServiceMap = ref(getOcrServiceMap())
+const ocrServiceMap = ref<any>(getOcrServiceMap())
 // 获取缓存中的Ocr服务list
-const ocrServiceList = ref([...ocrServiceMap.value.values()])
+const ocrServiceList = ref<any[]>([...ocrServiceMap.value.values()])
 // 当前选择的Ocr服务
-const ocrServiceThis = ref()
+const ocrServiceThis = ref<any>(null)
 // 设置当前选择的Ocr服务默认为第一个
 selectOneServiceThis()
 
@@ -301,7 +318,7 @@ const addService = (type): void => {
       return
     }
   }
-  const service = buildOcrService(type)
+  const service: any = buildOcrService(type)
   for (const ocrService of insideOcrServiceMap.values()) {
     if (
       ocrService.type === OcrServiceEnum.TTIME &&
@@ -318,8 +335,6 @@ const addService = (type): void => {
     saveOcrService(service)
     ocrServiceThis.value = service
   }
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.OCR)
 }
 
 /**
@@ -340,8 +355,6 @@ const deleteService = (): void => {
   updateThisServiceMap(insideOcrServiceMap)
   // 设置当前选中项默认为第一个Ocr服务
   selectOneServiceThis()
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.OCR)
 }
 
 /**
@@ -408,8 +421,6 @@ window.api.apiCheckOcrCallbackEvent((type, res): void => {
   if (ocrServiceThis.value.id === insideOcrService.id) {
     ocrServiceThis.value = insideOcrService
   }
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.OCR)
 })
 
 /**
@@ -447,7 +458,6 @@ const serviceUseStatusChange = (ocrService): void => {
     }
   }
   // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.OCR)
 }
 
 /**
@@ -480,8 +490,6 @@ const serviceSortDragChange = (event): void => {
   setOcrServiceMap(swappedMap)
   // 更新页面绑定翻译OCR数据
   updateThisServiceMap(swappedMap)
-  // 保存服务信息事件
-  saveServiceInfoHandle(ServiceTypeEnum.OCR)
 }
 
 /**
@@ -505,17 +513,6 @@ const ocrSpaceModelUpdate = (): void => {
   // 英语在所有三个模型中都存在的
   ocrServiceThis.value['languageType'] = 'eng'
 }
-
-/**
- * 刷新服务信息事件
- */
-window.api.refreshServiceInfoEvent(() => {
-  updateThisServiceMap(getOcrServiceMap())
-  // 设置当前选中项默认为第一个服务
-  selectOneServiceThis()
-})
-
-loadNewServiceInfo()
 
 </script>
 
@@ -558,10 +555,15 @@ loadNewServiceInfo()
         border-radius: 8px;
         display: flex;
         align-items: center;
+        overflow: hidden;
 
         .translate-service-expansion-block {
           display: flex;
           justify-content: space-between;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          padding: 0 14px;
         }
 
         &:hover.translate-service-block:not(.active) {
@@ -612,12 +614,26 @@ loadNewServiceInfo()
 
       .translate-service-set-fun {
         display: flex;
-        justify-content: space-between;
         align-items: center;
 
         .translate-service-use-text {
+          display: flex;
+          align-items: center;
+          min-width: 96px;
+          flex: 0 0 96px;
           font-size: 14px;
           padding-right: 10px;
+
+          :deep(.translate-service-status-tag) {
+            width: 86px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+          }
+        }
+
+        .translate-service-check-button {
+          margin-left: auto;
         }
       }
     }

@@ -61,81 +61,10 @@ const getVersionInfo = (): Promise<AxiosPromise> => {
   })
 }
 
-/**
- * 获取用户信息
- */
-const getUserInfo = (token): Promise<AxiosPromise> => {
-  return request({
-    url: 'auth/ttime/getUserInfo',
-    headers: {
-      token: token
-    }
-  })
-}
-
-/**
- * 退出登录
- */
-const logout = (): Promise<void> => {
-  return request({
-    url: 'auth/ttime/logout',
-    method: HttpMethodType.DELETE
-  })
-}
-
-/**
- * 获取用户配置
- */
-const getUserConfig = (): Promise<void> => {
-  return request({
-    url: 'translate/translateUserConfig/',
-    method: HttpMethodType.GET
-  })
-}
-
-/**
- * 获取用户配置 - 根据key
- */
-const getUserConfigByKey = (data): Promise<void> => {
-  return request({
-    url: 'translate/translateUserConfig/findByKey',
-    method: HttpMethodType.GET,
-    params: data
-  })
-}
-
-/**
- * 保存用户配置
- */
-const saveUserConfig = (data): Promise<void> => {
-  return request({
-    url: 'translate/translateUserConfig/',
-    method: HttpMethodType.POST,
-    data: data
-  })
-}
-
-/**
- * 批量保存用户配置
- */
-const batchSaveUserConfig = (data): Promise<void> => {
-  return request({
-    url: 'translate/translateUserConfig/batch',
-    method: HttpMethodType.POST,
-    data: data
-  })
-}
-
 export default {
   apiTranslate,
   translateUse,
   appStart,
   getVersionInfo,
-  apiOcr,
-  getUserInfo,
-  logout,
-  getUserConfig,
-  getUserConfigByKey,
-  saveUserConfig,
-  batchSaveUserConfig
+  apiOcr
 }

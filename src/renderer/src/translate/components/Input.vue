@@ -51,7 +51,7 @@ import {
   getTranslateServiceMapByUse,
   TranslateServiceBuilder
 } from '../../utils/translateServiceUtil'
-import { cacheGet, cacheGetByType, cacheSetByType } from '../../utils/cacheUtil'
+import { cacheGet, cacheGetByType } from '../../utils/cacheUtil'
 import ElMessageExtend from '../../utils/messageExtend'
 import {
   getLanguageNameConversion,
@@ -71,7 +71,7 @@ const isScreenshotEnd = ref(false)
 // 翻译输入框内容
 const translateContent = ref('')
 // 翻译输入框ref
-const translateContentInputRef = ref()
+const translateContentInputRef = ref<any>(null)
 const emit = defineEmits(['show-result-event', 'is-result-loading-event'])
 
 watch(translateContent, () => {
@@ -196,7 +196,7 @@ const translateFun = (): void => {
   }
   // 换行符替换为空格状态
   if (cacheGet('wrapReplaceSpaceStatus') === YesNoEnum.Y) {
-    translateContentDealWith = translateContentDealWith.replaceAll('\n', ' ').replaceAll('\r', ' ')
+    translateContentDealWith = translateContentDealWith.replace(/\n/g, ' ').replace(/\r/g, ' ')
   }
   // 获取当前默认输入文字语言
   let inputLanguage = cacheGet('inputLanguage')
@@ -231,7 +231,7 @@ const translateFun = (): void => {
   })
   const requestMap = new Map()
   // 遍历当前正在使用的翻译源
-  for (const translateService of translateServiceMapData.values()) {
+  for (const translateService of translateServiceMapData.values() as Iterable<any>) {
     // 翻译源类型
     const type = translateService.type
     // 如果不为自动识别 则从翻译源对应的文字语言中找到对应的语言代码
@@ -256,7 +256,7 @@ const translateFun = (): void => {
     // 翻译结果语言类型
     const languageResultTypeRequest = resultServiceLanguage.languageType
 
-    let info = buildTranslateRequestInfo(
+    let info: Record<string, any> = buildTranslateRequestInfo(
       translateContentDealWith,
       languageInputTypeRequest,
       languageResultTypeRequest
@@ -308,7 +308,7 @@ const translateFun = (): void => {
  * @param content 内容
  */
 const isContentNull = (content): boolean => {
-  return isNull(content.replaceAll('\n', '').replaceAll('\r', '').replaceAll(' ', ''))
+  return isNull(content.replace(/\n/g, '').replace(/\r/g, '').replace(/ /g, ''))
 }
 
 // 翻译内容输入事件 - 任务
@@ -335,10 +335,7 @@ const buildTranslateRequestInfo = (
   languageType,
   languageResultType
 ): {
-  channel
-  translateContent
-  languageType
-  languageResultType
+  [key: string]: any
 } => {
   return {
     channel: 0,

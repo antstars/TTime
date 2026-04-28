@@ -28,10 +28,10 @@ app.whenReady().then(() => {
  * 处理图片文字识别
  */
 ipcMain.handle('handle-image-text-recognition-event', async (_event, imgByBase64) => {
-  // @ts-ignore
-  const ocrService = StoreService.configGet('ocrServiceMap').filter(
-    (ocrService) => ocrService[1].useStatus
-  )[0][1]
+  const ocrServiceMap = StoreService.configGet('ocrServiceMap') as
+    | Array<[string, any]>
+    | undefined
+  const ocrService = ocrServiceMap?.filter((ocrService) => ocrService[1].useStatus)[0]?.[1]
   if (isNull(ocrService)) {
     return
   }
@@ -168,6 +168,7 @@ class ScreenshotsSon {
     this.screenshotsWinId = new Date().getTime().toString()
     const width = screenshots.width
     const height = screenshots.height
+    log.debug('[截图窗口] 创建截图窗口, ID: ', this.screenshotsWinId, ', 尺寸: ', width, 'x', height)
     this.screenshotsWin = new BrowserWindow({
       // window 使用 fullscreen,  mac 设置为 undefined, 不可为 false
       fullscreen: process.platform !== 'darwin' || undefined, // win
@@ -213,7 +214,7 @@ class ScreenshotsSon {
     }
 
     // 打开开发者工具
-    // this.screenshotsWin.webContents.openDevTools({ mode: 'right' })
+    this.screenshotsWin.webContents.openDevTools({ mode: 'detach' })
 
     // 当 window 被关闭，这个事件会被触发。
     this.screenshotsWin.on('closed', () => {
@@ -228,13 +229,17 @@ class ScreenshotsSon {
     this.screenshotsWin.webContents
       .executeJavaScript('JSON.stringify({width:screen.width,height: screen.height})')
       .then((value) => {
+        log.debug('[截图窗口] executeJavaScript 完成, 准备显示窗口')
         if (SystemTypeEnum.isMac()) {
+          log.debug('[截图窗口] Mac系统, 使用 show()')
           this.screenshotsWin.show()
         } else {
+          log.debug('[截图窗口] Windows系统, 使用 setAlwaysOnTop + setVisibleOnAllWorkspaces + showInactive')
           this.screenshotsWin.setAlwaysOnTop(true, 'pop-up-menu', 1)
           this.screenshotsWin.setVisibleOnAllWorkspaces(true)
           this.screenshotsWin.showInactive()
         }
+        log.debug('[截图窗口] 窗口显示方法已调用')
         const res = JSON.parse(value)
         const screenWidth = res.width
         const screenHeight = res.height
@@ -277,6 +282,7 @@ class ScreenshotsMain {
    * 创建截图窗口
    */
   createScreenshotsWin(): void {
+    log.debug('[截图] 开始创建截图窗口')
     // 创建浏览器窗口，只允许创建一个
     if (ScreenshotsMain.isCreate) {
       log.info('已经触发截图事件')

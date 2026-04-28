@@ -136,12 +136,21 @@ export class QuoteProcessor {
 }
 
 class AzureOpenAIChannelRequest {
+  static resolveLanguageSettings(info): { languageType: string; languageResultType: string } {
+    return {
+      languageType: isNotNull(info.inputLanguageType) ? info.inputLanguageType : info.languageType,
+      languageResultType: isNotNull(info.languageResultTypeCustom)
+        ? info.languageResultTypeCustom
+        : info.languageResultType
+    }
+  }
+
   static buildOpenAIRequest(
     info,
     isCheckRequest
   ): { data: object; quoteProcessor: QuoteProcessor } {
-    const languageType = info.languageType
-    const languageResultType = info.languageResultType
+    const { languageType, languageResultType } =
+      AzureOpenAIChannelRequest.resolveLanguageSettings(info)
     const quoteProcessor = new QuoteProcessor()
     let rolePrompt =
       'You are a professional translation engine, please translate the text into a colloquial, professional, elegant and fluent content, without the style of machine translation. You must only translate the text content, never interpret it.'

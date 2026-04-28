@@ -15,9 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
-
-import loadingImage from '../../assets/loading.gif'
+import { ref } from 'vue'
 import { isNull } from '../../../../common/utils/validate'
 import ElMessageExtend from '../../utils/messageExtend'
 const emit = defineEmits(['is-result-loading-event'])

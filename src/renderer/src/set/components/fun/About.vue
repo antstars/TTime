@@ -13,7 +13,7 @@
 
     <div class="about-layer-down">
       <el-divider />
-      <template v-for="(info, key) in list" :key="key">
+      <template v-for="info in list" :key="info.url">
         <span class="about-info-url cursor-pointer" @click="toPage(info.url)">{{ info.val }}</span>
       </template>
     </div>

@@ -2,9 +2,6 @@ import { cacheGetByType, cacheSetByType } from './cacheUtil'
 import { StoreTypeEnum } from '../../../common/enums/StoreTypeEnum'
 import TranslateRecordVo from '../../../common/class/TranslateRecordVo'
 import { isNull } from '../../../common/utils/validate'
-import TranslateServiceRecordVo from '../../../common/class/TranslateServiceRecordVo'
-import { translateRecordSave, TranslateRecordSavePo } from '../api/translateRecord'
-import { isMemberVip } from './memberUtil'
 
 /**
  * 更新翻译记录
@@ -12,7 +9,7 @@ import { isMemberVip } from './memberUtil'
  * @param translateVo 翻译结果
  */
 export const updateTranslateRecord = (translateVo): void => {
-  let requestId = translateVo['requestId']
+  const requestId = translateVo['requestId']
   // 翻译记录
   const translateRecordList = cacheGetByType(StoreTypeEnum.HISTORY_RECORD, 'translateRecordList')
   for (let i = 0; i < translateRecordList.length; i++) {
@@ -28,11 +25,6 @@ export const updateTranslateRecord = (translateVo): void => {
           delete newTranslateInfo.requestId
           translateServiceRecord['translateVo'] = newTranslateInfo
           translateServiceRecord.translateStatus = true
-        }
-      }
-      if(isMemberVip()) {
-        if(translateServiceRecordList.every((translateServiceRecord: TranslateServiceRecordVo) => translateServiceRecord.translateStatus)) {
-          translateRecordSave(TranslateRecordSavePo.build(translateRecord)).then(() => {})
         }
       }
     }

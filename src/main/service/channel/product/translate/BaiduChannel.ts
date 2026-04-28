@@ -101,7 +101,7 @@ class BaiduChannel implements ITranslateInterface {
     } else if (errorCode === '58002') {
       msg = '服务当前已关闭 , 请前往管理控制台开启服务'
     } else if (errorCode === '90107') {
-      msg = '认证未通过或未生效 , 请前往我的认证查看认证进度'
+      msg = '认证未通过或未生效 , 请检查当前账号认证状态后重试'
     }
     return msg
   }

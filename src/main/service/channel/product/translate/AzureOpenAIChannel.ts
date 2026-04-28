@@ -23,7 +23,7 @@ class AzureOpenAIChannel extends TranslateAgent implements ITranslateAgentInterf
     if (OpenAIStatusEnum.ERROR === code) {
       const error = data.error
       // 如果error中带有error则表示为openai返回的异常
-      if (isNotNull(error.error)) {
+      if (isNotNull(error?.error)) {
         const errorMsg = error.error.message
         AzureOpenAIChannel.callbackEvent(
           info,
@@ -34,7 +34,7 @@ class AzureOpenAIChannel extends TranslateAgent implements ITranslateAgentInterf
       }
       // 请求异常处理
       if (isNotNull(error)) {
-        if ('Error: Failed to fetch'.indexOf(error) !== -1) {
+        if (String(error).includes('Error: Failed to fetch')) {
           // 此处一般是代理不可用问题造成的
           AzureOpenAIChannel.callbackEvent(
             info,

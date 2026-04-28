@@ -5,7 +5,6 @@ import { isNull } from '../../common/utils/validate'
 import log from '../utils/log'
 import GlobalWin from './GlobalWin'
 import { injectWinAgent } from '../utils/RequestUtil'
-import TTimeAuth from './auth/TTimeAuth'
 import { StoreConfigFunTypeEnum } from '../../common/enums/StoreConfigFunTypeEnum'
 import StoreService from './StoreService'
 import { StoreTypeEnum } from '../../common/enums/StoreTypeEnum'
@@ -99,16 +98,3 @@ ipcMain.on('open-directory-dialog', (event, storeConfigFunType, storeType) => {
     })
 })
 
-/**
- * 退出登录
- */
-ipcMain.handle('logout-event', () => {
-  TTimeAuth.logout()
-})
-
-/**
- * 刷新服务信息通知
- */
-ipcMain.handle('refresh-service-info-notify', (_event) => {
-  GlobalWin.setWin.webContents.send('refresh-service-info-event')
-})

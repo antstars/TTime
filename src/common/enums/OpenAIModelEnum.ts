@@ -30,7 +30,7 @@ class OpenAIModelEnum {
   /**
    * 默认请求URL
    */
-  static REQUEST_URL = 'https://api.openai.com'
+  static REQUEST_URL = 'https://api.openai.com/v1'
 
   /**
    * 模型列表

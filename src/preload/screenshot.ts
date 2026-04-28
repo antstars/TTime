@@ -7,7 +7,7 @@ const ipcRenderer = electronAPI.ipcRenderer
 /**
  * 页面鼠标右键监听
  */
-document.oncontextmenu = () => {
+document.oncontextmenu = (): void => {
   // 关闭截图窗口事件
   ipcRenderer.invoke('close-screenshots-win-event')
 }
@@ -38,7 +38,7 @@ ipcRenderer.on('win-multiple-draw-screenshot-style', async (_event, screenImgInf
  * 窗口绘制截图样式
  */
 ipcRenderer.on('win-draw-screenshot-style', async (_event, screenImgInfo) => {
-  // @ts-ignore
+  // @ts-ignore screenshot.html guarantees screenId is an input element
   // 设置显示器ID
   document.getElementById('screenId').value = screenImgInfo.screenId
   // 获取当前鼠标所在的显示器缩放比例事件
@@ -57,7 +57,7 @@ ipcRenderer.on('win-draw-screenshot-style', async (_event, screenImgInfo) => {
   // 窗口绘制截图样式
   const draw = new Draw(
     screenImgInfo.screenImgUrl,
-    // @ts-ignore
+    // @ts-ignore screenshot.html guarantees the queried image elements exist
     bg,
     bgMagnifier,
     screenImgInfo.width,

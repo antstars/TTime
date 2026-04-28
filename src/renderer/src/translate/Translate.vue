@@ -28,21 +28,22 @@ import { nextTick, ref } from 'vue'
 import ElMessageExtend from '../utils/messageExtend'
 
 import { isNull } from '../../../common/utils/validate'
-import { buildTranslateService, setTranslateServiceMap } from '../utils/translateServiceUtil'
+import {
+  getTranslateServiceMap,
+  setTranslateServiceMap
+} from '../utils/translateServiceUtil'
 import { buildOcrService, setOcrServiceMap } from '../utils/ocrServiceUtil'
 import { initTheme } from '../utils/themeUtil'
 import { cacheGet, oldCacheGet } from '../utils/cacheUtil'
 import '../channel/ChannelRequest'
-import TranslateServiceEnum from '../../../common/enums/TranslateServiceEnum'
 import OcrServiceEnum from '../../../common/enums/OcrServiceEnum'
-import { loadNewServiceInfo } from '../utils/memberUtil'
 import { YesNoEnum } from '../../../common/enums/YesNoEnum'
 
 initTheme()
 
 // 翻译输入组件
-const translateInput = ref('')
-const translatedResultInput = ref('')
+const translateInput = ref<any>(null)
+const translatedResultInput = ref<any>(null)
 const hideTranslateInput = ref(false)
 const hideTranslateLanguage = ref(false)
 
@@ -51,8 +52,6 @@ window.api.ttimeApiAppStart()
 
 // 页面高度改变监听
 window.api.pageHeightChangeEvent()
-
-loadNewServiceInfo()
 
 // 清空翻译输入、结果内容事件
 window.api.clearAllTranslateContentEvent(() => {
@@ -75,28 +74,13 @@ window.api.winShowByInputEvent(() => {
  * 翻译服务list 如果不存在则说明第一次打开
  * 初始化默认翻译服务
  */
-if (isNull(cacheGet('translateServiceMap'))) {
+if (isNull(cacheGet('translateServiceMap')) || getTranslateServiceMap().size === 0) {
   const translateServiceMap = oldCacheGet('translateServiceMap')
   if (undefined !== translateServiceMap) {
     // 兼容浏览器存储方式的数据 导入到文件存储里去
     setTranslateServiceMap(new Map(translateServiceMap))
   } else {
-    const map = new Map()
-    const ttimeService = buildTranslateService(TranslateServiceEnum.TTIME)
-    map.set(ttimeService.id, ttimeService)
-    setTranslateServiceMap(map)
-
-    const bingDictService = buildTranslateService(TranslateServiceEnum.BING_DICT)
-    map.set(bingDictService.id, bingDictService)
-    setTranslateServiceMap(map)
-
-    const deepLBuiltInService = buildTranslateService(TranslateServiceEnum.DEEP_L_BUILT_IN)
-    map.set(deepLBuiltInService.id, deepLBuiltInService)
-    setTranslateServiceMap(map)
-
-    const niuTransBuiltInService = buildTranslateService(TranslateServiceEnum.NIU_TRANS_BUILT_IN)
-    map.set(niuTransBuiltInService.id, niuTransBuiltInService)
-    setTranslateServiceMap(map)
+    setTranslateServiceMap(new Map())
   }
 }
 
@@ -111,7 +95,7 @@ if (isNull(cacheGet('ocrServiceMap'))) {
     setOcrServiceMap(new Map(ocrServiceMap))
   } else {
     const map = new Map()
-    const ttimeService = buildOcrService(OcrServiceEnum.TTIME)
+    const ttimeService: any = buildOcrService(OcrServiceEnum.TTIME)
     map.set(ttimeService.id, ttimeService)
     setOcrServiceMap(map)
   }

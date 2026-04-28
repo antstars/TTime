@@ -3,7 +3,7 @@
     <div class="network-layer">
       <el-form label-width="120px">
         <el-form-item label="代理设置">
-          <el-select v-model="agentConfig.type">
+          <el-select v-model="agentConfig.type" class="network-agent-select">
             <el-option
               v-for="model in agentSelectList"
               :key="model.value"
@@ -59,8 +59,19 @@ import { isNull } from '../../../../../common/utils/validate'
 import ElMessageExtend from '../../../utils/messageExtend'
 import { cacheGet, cacheSet } from '../../../utils/cacheUtil'
 
-const agentConfig = ref(cacheGet('agentConfig'))
-const checkIngStatus = ref(false)
+const defaultAgentConfig = {
+  type: 0,
+  checkStatus: false,
+  host: '',
+  port: '',
+  userName: '',
+  passWord: ''
+}
+const cachedAgentConfig = cacheGet('agentConfig')
+const agentConfig = ref({
+  ...defaultAgentConfig,
+  ...(isNull(cachedAgentConfig) ? {} : cachedAgentConfig)
+})
 const agentSelectList = [
   { label: '不使用代理', value: 0 },
   { label: 'HTTP代理', value: 1 }
@@ -69,16 +80,19 @@ const agentSelectList = [
 /**
  * 不设置代理保存
  */
-const save = () => {
-  if (isNull(agentConfig.value.host) || isNull(agentConfig.value.port)) {
-    return ElMessageExtend.warning('代理地址或端口号不能为空')
+const save = (): void => {
+  if (agentConfig.value.type !== 0 && (isNull(agentConfig.value.host) || isNull(agentConfig.value.port))) {
+    ElMessageExtend.warning('代理地址或端口号不能为空')
+    return
   }
   // if ((!isNull(agentConfig.value.userName) && isNull(agentConfig.value.passWord)) || (isNull(agentConfig.value.userName) && !isNull(agentConfig.value.passWord))) {
   //   return ElMessageExtend.warning('请填写完整的代理用户名和密码')
   // }
   cacheSet('agentConfig', agentConfig.value)
   ElMessageExtend.success('保存成功')
-  setTimeout(window.api.agentUpdateEvent(cacheGet('agentConfig')), 500)
+  setTimeout(() => {
+    window.api.agentUpdateEvent(cacheGet('agentConfig'))
+  }, 500)
 }
 </script>
 
@@ -97,5 +111,9 @@ const save = () => {
 
 .network-input {
   //width: 70%;
+}
+
+.network-agent-select {
+  width: 150px;
 }
 </style>

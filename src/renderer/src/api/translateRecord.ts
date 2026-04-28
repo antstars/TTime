@@ -77,8 +77,8 @@ export class TranslateRecordDetail {
   wfs: string
 
   static build(translateServiceRecord: TranslateServiceRecordVo): TranslateRecordDetail {
-    let translateRecordDetail = new TranslateRecordDetail()
-    let translateVo: TranslateVo = translateServiceRecord.translateVo
+    const translateRecordDetail = new TranslateRecordDetail()
+    const translateVo: TranslateVo = translateServiceRecord.translateVo
     translateRecordDetail.translateServiceType = translateServiceRecord.translateServiceType
     translateRecordDetail.translateServiceId = translateServiceRecord.translateServiceId
     if (typeof translateVo.translateList !== 'string') {

@@ -10,11 +10,11 @@ log.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}]{scope} {t
 
 const date = new Date()
 // 补0扩展 当获取到的数字小于10时，数字前面补0
-const zeroExpand = (num): string => {
-  return parseInt(num) < 10 ? '0' + num : num
+const zeroExpand = (num: number): string => {
+  return num < 10 ? '0' + num : String(num)
 }
 const dateName =
   date.getFullYear() + '-' + zeroExpand(date.getMonth() + 1) + '-' + zeroExpand(date.getDate())
 // 输出路径 : /Users/用户账号名称/Library/Application Support/time-translate/logs/年-月-日.log
-log.transports.file.resolvePath = () => path.join(StoreService.logsPath, dateName + '.log')
+log.transports.file.resolvePath = (): string => path.join(StoreService.logsPath, dateName + '.log')
 export default log

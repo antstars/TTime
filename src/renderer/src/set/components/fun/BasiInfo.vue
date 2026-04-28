@@ -16,10 +16,6 @@
       <el-switch v-model='basilInfo.autoLaunch' @change='autoLaunchEvent' />
       <span class='form-switch-span none-select'> 开机自动启动TTime翻译 </span>
     </el-form-item>
-    <el-form-item class='none-select' label='自动检测新版本'>
-      <el-switch v-model='basilInfo.autoUpdater' @change='autoUpdaterEvent' />
-      <span class='form-switch-span none-select'> 会在软件启动时检测新版本 </span>
-    </el-form-item>
     <el-form-item class='none-select' label='隐藏翻译输入框'>
       <el-switch v-model='basilInfo.hideTranslateInput' @change='hideTranslateInputEvent' />
       <span class='form-switch-span none-select'> 翻译窗口将不显示翻译输入框 </span>
@@ -94,7 +90,6 @@ const basilInfo = ref({
   theme: localStorage['useTheme'],
   language: 'zh',
   autoLaunch: cacheGet('autoLaunch') === YesNoEnum.Y,
-  autoUpdater: cacheGet('autoUpdater') === YesNoEnum.Y,
   translateShowPositionType: cacheGet('translateShowPositionType'),
   fromTopOfWindowPercentage: cacheGet('fromTopOfWindowPercentage'),
   translateChoiceDelay: cacheGet('translateChoiceDelay'),
@@ -112,19 +107,6 @@ const autoLaunchEvent = (autoLaunch): void => {
   cacheSet('autoLaunch', autoLaunch ? YesNoEnum.Y : YesNoEnum.N)
   basilInfo.value.autoLaunch = autoLaunch
   window.api.autoLaunchEvent(autoLaunch)
-}
-
-/**
- * 自动更新事件
- *
- * @param autoUpdater 自动更新状态
- */
-const autoUpdaterEvent = (autoUpdater): void => {
-  cacheSet('autoUpdater', autoUpdater ? YesNoEnum.Y : YesNoEnum.N)
-  basilInfo.value.autoUpdater = autoUpdater
-  if (autoUpdater) {
-    window.api.autoUpdaterSilenceStartCheckEvent()
-  }
 }
 
 /**

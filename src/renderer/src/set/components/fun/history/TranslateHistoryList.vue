@@ -23,13 +23,13 @@
                   :class="{ active: translateRecordThis.requestId === element.requestId }"
                   @click="selectTranslateRecord(element)"
                 >
-                  <a class="translate-service-block none-select translate-service-expansion-block">
+                  <div class="translate-service-expansion-block">
                     <div class="left">
                       <span class="translate-service-name none-select">
                         {{ element.translateContent }}
                       </span>
                     </div>
-                  </a>
+                  </div>
                 </li>
               </div>
             </el-scrollbar>
@@ -200,11 +200,15 @@ const deleteTranslateHistory = (): void => {
           border-radius: 8px;
           display: flex;
           align-items: center;
-          justify-content: space-around;
+          overflow: hidden;
 
           .translate-service-expansion-block {
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 0 12px;
           }
 
           &:hover.translate-service-block:not(.active) {

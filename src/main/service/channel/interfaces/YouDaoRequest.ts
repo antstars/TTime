@@ -7,7 +7,7 @@ import crypto from 'crypto'
  *
  * @param info 翻译信息
  */
-const apiTranslate = async (info) => {
+const apiTranslate = async (info): Promise<any> => {
   const content = info.translateContent
   const salt = new Date().getTime()
   const curtime = Math.round(new Date().getTime() / 1000)
@@ -33,7 +33,7 @@ const apiTranslate = async (info) => {
   })
 }
 
-function truncate(q) {
+function truncate(q: string): string {
   const len = q.length
   if (len <= 20) {
     return q

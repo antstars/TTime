@@ -34,7 +34,7 @@
           <el-input v-model="languageSearchInput" placeholder="输入语言名称" />
         </div>
         <div class="language-list-block none-select function-tools-block">
-          <template v-for="(language, index) in languageInputList" :key="index">
+          <template v-for="language in languageInputList" :key="language.languageName">
             <a
               class="language-block none-select function-tools"
               :class="{
@@ -44,7 +44,7 @@
             >
               <div class="language-name none-select">{{ language.languageName }}</div>
               <div class="language-logo-block none-select">
-                <template v-for="(service, indexTwo) in language.serviceList" :key="indexTwo">
+                <template v-for="service in language.serviceList" :key="service.type">
                   <img class="language-logo none-select" :src="service.logo" />
                 </template>
               </div>
@@ -60,7 +60,7 @@
           <el-input v-model="languageSearchResult" placeholder="输入语言名称" />
         </div>
         <div class="language-list-block none-select function-tools-block">
-          <template v-for="(language, index) in languageResultList" :key="index">
+          <template v-for="language in languageResultList" :key="language.languageName">
             <a
               class="language-block none-select function-tools"
               :class="{
@@ -70,7 +70,7 @@
             >
               <div class="language-name none-select">{{ language.languageName }}</div>
               <div class="language-logo-block none-select">
-                <template v-for="(service, indexTwo) in language.serviceList" :key="indexTwo">
+                <template v-for="service in language.serviceList" :key="service.type">
                   <img class="language-logo none-select" :src="service.logo" />
                 </template>
               </div>
@@ -101,9 +101,9 @@ if (undefined === cacheGet('resultLanguage')) {
   cacheSet('resultLanguage', languageAuto)
 }
 
-const languageList = ref([])
-const languageInputList = ref([])
-const languageResultList = ref([])
+const languageList = ref<any[]>([])
+const languageInputList = ref<any[]>([])
+const languageResultList = ref<any[]>([])
 const showLanguageInput = ref(false)
 const showLanguageResult = ref(false)
 const languageSearchInput = ref('')

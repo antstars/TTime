@@ -16,7 +16,7 @@ class TencentCloudImageOcrChannel implements IOcrInterface {
     TencentCloudRequest.apiOcrTranslate(info).then(
       (res) => {
         log.info('[腾讯云图片翻译OCR事件] - 响应报文 : ', res)
-        const text = res?.ImageRecord?.Value?.map((detection) => detection.SourceText).join('\n')
+        const text = res?.SourceText ?? res?.TargetText ?? ''
         GlobalWin.ocrUpdateContent(YesNoEnum.Y, text)
       },
       (err) => {

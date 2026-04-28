@@ -113,7 +113,7 @@ class YouDaoChannel implements ITranslateInterface {
     } else if (errorCode === '412') {
       msg = '长请求过于频繁，请稍后访问'
     } else if (errorCode === '90107') {
-      msg = '认证未通过或未生效 , 请前往我的认证查看认证进度 '
+      msg = '认证未通过或未生效 , 请检查当前账号认证状态后重试 '
     }
     return msg
   }

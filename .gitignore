@@ -2,6 +2,7 @@ node_modules
 dist
 out
 *.log*
+nul
 !/node_modules_update/**/dist
 package-lock.json
 

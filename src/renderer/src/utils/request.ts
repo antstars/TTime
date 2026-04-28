@@ -1,7 +1,5 @@
 import axios from 'axios'
 import ElMessageExtend from './messageExtend'
-import { cacheGet } from './cacheUtil'
-import { isNotNull } from '../../../common/utils/validate'
 
 // 创建 axios
 const service = axios.create({
@@ -17,11 +15,6 @@ const service = axios.create({
  */
 service.interceptors.request.use(
   (config) => {
-    const token = cacheGet('token')
-    if (isNotNull(token)) {
-      // 设置用户token
-      config.headers['token'] = token
-    }
     return config
   },
   (error) => {
@@ -39,12 +32,6 @@ service.interceptors.response.use(
     const res = response.data
     if (res.status === undefined) {
       return res
-    } else if (res.status === -200) {
-      // 登录失效则触发退出登录
-      window.api.logoutEvent()
-      // 请求失败 抛出错误信息
-      ElMessageExtend.errorInOptions(res.msg, { duration: 5 * 1000 })
-      return Promise.reject(new Error(res.msg || 'Error'))
     } else if (res.status !== 200) {
       // 请求失败 抛出错误信息
       ElMessageExtend.errorInOptions(res.msg, { duration: 5 * 1000 })

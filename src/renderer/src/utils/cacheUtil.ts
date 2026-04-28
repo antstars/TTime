@@ -71,7 +71,7 @@ export const cacheDeleteByType = (storeType, key): void => {
  *
  * @param key key
  */
-export const oldCacheGet = (key) => {
+export const oldCacheGet = (key): any => {
   return oldCacheGetByObj(key, true)
 }
 
@@ -81,7 +81,7 @@ export const oldCacheGet = (key) => {
  * @param key key
  * @param val val
  */
-export const oldCacheSet = (key, val) => {
+export const oldCacheSet = (key, val): any => {
   return oldCacheSetByObj(key, val, true)
 }
 
@@ -90,7 +90,7 @@ export const oldCacheSet = (key, val) => {
  *
  * @param key key
  */
-export const oldCacheGetStr = (key) => {
+export const oldCacheGetStr = (key): any => {
   return oldCacheGetByObj(key, false)
 }
 
@@ -100,7 +100,7 @@ export const oldCacheGetStr = (key) => {
  * @param key key
  * @param val val
  */
-export const oldCacheSetStr = (key, val) => {
+export const oldCacheSetStr = (key, val): any => {
   return oldCacheSetByObj(key, val, false)
 }
 
@@ -110,7 +110,7 @@ export const oldCacheSetStr = (key, val) => {
  * @param key key
  * @param isObj 是否为对象
  */
-export const oldCacheGetByObj = (key, isObj) => {
+export const oldCacheGetByObj = (key, isObj): any => {
   const res = localStorage[key]
   return isNotNull(res) && isObj ? JSON.parse(res) : res
 }
@@ -122,6 +122,6 @@ export const oldCacheGetByObj = (key, isObj) => {
  * @param val   val
  * @param isObj 是否为对象
  */
-export const oldCacheSetByObj = (key, val, isObj) => {
+export const oldCacheSetByObj = (key, val, isObj): any => {
   return (localStorage[key] = isNotNull(val) && isObj ? JSON.stringify(val) : val)
 }

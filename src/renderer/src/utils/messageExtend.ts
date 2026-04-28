@@ -18,8 +18,7 @@ class ElMessageExtend {
     const elMessageList = document.querySelectorAll('.el-message')
     if (elMessageList) {
       for (let i = 0; i < elMessageList.length; i++) {
-        // @ts-ignore
-        elMessageList[i].style.cssText = 'border-radius: 8px;'
+        ;(elMessageList[i] as HTMLElement).style.cssText = 'border-radius: 8px;'
       }
     }
   }
@@ -34,7 +33,7 @@ class ElMessageExtend {
     }, 100)
   }
 
-  static warning(message) {
+  static warning(message): void {
     setTimeout(() => {
       ElMessage({
         type: 'warning',

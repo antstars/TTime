@@ -83,7 +83,7 @@ const cacheDelete = (storeTypeEnum, key): void => {
 /**
  * 跳转页面
  */
-const jumpToPage = (url) => {
+const jumpToPage = (url): void => {
   ipcRenderer.send('jump-to-page-event', url)
 }
 
@@ -110,13 +110,6 @@ const textWriteShearPlateEvent = (text): void => {
   ipcRenderer.invoke('text-write-shear-plate-event', text)
 }
 
-/**
- * 退出登录
- */
-const logoutEvent = (): void => {
-  ipcRenderer.invoke('logout-event')
-}
-
 export default {
   logInfoEvent,
   logErrorEvent,
@@ -130,6 +123,5 @@ export default {
   jumpToPage,
   getVersionEvent,
   closeAppEvent,
-  textWriteShearPlateEvent,
-  logoutEvent
+  textWriteShearPlateEvent
 }

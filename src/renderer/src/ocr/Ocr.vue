@@ -27,7 +27,7 @@ import OcrImg from './components/OcrImg.vue'
 import { ref } from 'vue'
 import ElMessageExtend from '../utils/messageExtend'
 
-const ocrTextareaRef = ref('')
+const ocrTextareaRef = ref<any>(null)
 
 /**
  * 调起消息弹层提示事件

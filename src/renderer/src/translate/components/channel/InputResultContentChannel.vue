@@ -138,7 +138,7 @@ import { YesNoEnum } from '../../../../../common/enums/YesNoEnum'
 
 // 翻译内容框内容
 const props = defineProps<{
-  translateService: object
+  translateService: any
 }>()
 
 /**
@@ -163,17 +163,30 @@ watch(
 )
 // 加载loading
 const loadingImageSrc = ref(loadingImage)
-const translateServiceThis = ref(props.translateService)
+const translateServiceThis = ref<any>(props.translateService)
 
 // 翻译结果
 const translatedResultContent = ref('')
-const dictTranslatedResultExpand = ref({})
+const dictTranslatedResultExpand = ref<any>({
+  isPhonetic: false,
+  isUs: false,
+  isUk: false,
+  isExplainList: false,
+  isWfs: false,
+  phonetic: '',
+  usPhonetic: '',
+  ukPhonetic: '',
+  usSpeech: '',
+  ukSpeech: '',
+  explainList: [],
+  wfsList: []
+})
 // 是否正在加载翻译结果
 const isResultLoading = ref(false)
 // 显示翻译结果
 const showResult = ref(false)
 // 翻译结果内容容器
-const translatedResultContentRef = ref('')
+const translatedResultContentRef = ref<any>(null)
 // 复制驼峰命名按钮显示
 const copyCamelCaseResultStatus = ref(cacheGet('copyCamelCaseResultStatus') === YesNoEnum.Y)
 // 复制下划线命名按钮显示
@@ -380,8 +393,7 @@ const isStreamTranslateService = (): boolean => {
   const type = props.translateService['type']
   return (
     TranslateServiceEnum.OPEN_AI === type ||
-    TranslateServiceEnum.AZURE_OPEN_AI === type ||
-    TranslateServiceEnum.TTIME_AI === type
+    TranslateServiceEnum.AZURE_OPEN_AI === type
   )
 }
 

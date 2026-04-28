@@ -3,6 +3,27 @@
 <head>
   <meta charset='UTF-8' />
   <title>设置</title>
+  <script>
+    window.addEventListener('error', function (event) {
+      if (window.api && window.api.logErrorEvent) {
+        window.api.logErrorEvent(
+          '[设置窗口异常]',
+          event.message,
+          event.filename,
+          event.lineno,
+          event.colno,
+          event.error && event.error.stack ? event.error.stack : event.error
+        )
+      }
+    })
+
+    window.addEventListener('unhandledrejection', function (event) {
+      if (window.api && window.api.logErrorEvent) {
+        const reason = event.reason && event.reason.stack ? event.reason.stack : event.reason
+        window.api.logErrorEvent('[设置窗口Promise异常]', reason)
+      }
+    })
+  </script>
 </head>
 <style>
 
@@ -17,9 +38,4 @@
 <div id='app'></div>
 </body>
 <script type='module' src='/src/set/main.ts'></script>
-<script>
-  window.addEventListener('error', function (event) {
-    window.api.logErrorEvent('[设置窗口异常]', event.error)
-  });
-</script>
 </html>

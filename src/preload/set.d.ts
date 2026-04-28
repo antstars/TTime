@@ -7,8 +7,6 @@ declare global {
     getSystemTypeEvent
     closeSetWinEvent
     autoLaunchEvent
-    autoUpdaterEvent
-    autoUpdaterSilenceStartCheckEvent
     updateTranslateServiceNotify
     apiUniteTranslateCheck
     apiCheckTranslateCallbackEvent
@@ -25,11 +23,6 @@ declare global {
     setWinFocusEvent
     winFontSizeNotify
     winShowEvent
-    refreshUserInfoEvent
-    refreshServiceInfoEvent
-    refreshServiceInfoNotify
-    loginSuccessEvent
-    authRefreshSuccessEvent
   }
 
   interface Window {

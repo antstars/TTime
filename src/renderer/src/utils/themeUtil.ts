@@ -4,7 +4,7 @@ import { ThemeTypeEnum } from '../enums/ThemeTypeEnum'
 /**
  * 初始化主题
  */
-export const initTheme = () => {
+export const initTheme = (): any => {
   // 参考文档 : https://vueuse.org/core/useColorMode/#component-usage
   const useThemeMode = useColorMode({
     // localStorage key 名称

@@ -8,42 +8,42 @@ class ServiceConfig {
   /**
    * ID
    */
-  id: string
+  id!: string
 
   /**
    * 服务类型
    */
-  type: string
+  type!: string
 
   /**
    * 服务名称 - 自定义
    */
-  serviceName: string
+  serviceName!: string
 
   /**
    * 使用状态
    */
-  useStatus: boolean
+  useStatus!: boolean
 
   /**
    * 是否内置
    */
-  isBuiltIn: boolean
+  isBuiltIn!: boolean
 
   /**
    * 应用ID
    */
-  appId: string
+  appId!: string
 
   /**
    * 应用秘钥
    */
-  appKey: string
+  appKey!: string
 
   /**
    * 验证状态
    */
-  checkStatus: boolean
+  checkStatus!: boolean
 
   static buildIsBuiltInService = (info): object => {
     if (isNull(info)) {

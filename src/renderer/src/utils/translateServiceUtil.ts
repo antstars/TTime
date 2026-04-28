@@ -3,29 +3,81 @@ import { cacheGet, cacheSet } from './cacheUtil'
 import { isNull } from '../../../common/utils/validate'
 import ServiceConfig from '../../../common/class/ServiceConfig'
 
+const builtInTranslateServiceSet = new Set([
+  TranslateServiceEnum.TTIME,
+  TranslateServiceEnum.BING,
+  TranslateServiceEnum.BING_DICT,
+  TranslateServiceEnum.GOOGLE_BUILT_IN,
+  TranslateServiceEnum.DEEP_L_BUILT_IN,
+  TranslateServiceEnum.NIU_TRANS_BUILT_IN,
+  TranslateServiceEnum.TRAN_SMART,
+  TranslateServiceEnum.EC_DICT
+])
+
+const cloneTranslateServiceMap = (translateServiceMap?: Map<string, any>): Map<string, any> => {
+  return translateServiceMap instanceof Map ? new Map(translateServiceMap) : new Map()
+}
+
+export const isBuiltInTranslateService = (type: string): boolean => {
+  return builtInTranslateServiceSet.has(type)
+}
+
+export const createDefaultOpenAIService = (): any => {
+  return buildTranslateService(TranslateServiceEnum.OPEN_AI)
+}
+
+const normalizeTranslateServiceMap = (translateServiceMap?: Map<string, any>): Map<string, any> => {
+  const map = cloneTranslateServiceMap(translateServiceMap)
+  const normalizedMap = new Map()
+
+  map.forEach((translateService, key) => {
+    if (translateService['type'] === 'PAPAGO') {
+      translateService['type'] = TranslateServiceEnum.PAPAGO
+    }
+    if (isBuiltInTranslateService(translateService['type'])) {
+      return
+    }
+    const serviceConfigInfo = TranslateServiceBuilder.getServiceConfigInfo(translateService['type'])
+    if (isNull(serviceConfigInfo)) {
+      return
+    }
+    const defaultInfo = serviceConfigInfo.defaultInfo
+    if (!isNull(defaultInfo)) {
+      Object.keys(defaultInfo).forEach((defaultKey) => {
+        if (isNull(translateService[defaultKey])) {
+          translateService[defaultKey] = defaultInfo[defaultKey]
+        }
+      })
+    }
+    normalizedMap.set(key, translateService)
+  })
+
+  if (normalizedMap.size === 0) {
+    const defaultOpenAIService = createDefaultOpenAIService()
+    normalizedMap.set(defaultOpenAIService.id, defaultOpenAIService)
+  }
+
+  let index = 0
+  normalizedMap.forEach((translateService) => {
+    translateService['index'] = index
+    delete translateService.serviceInfo
+    index++
+  })
+
+  return normalizedMap
+}
+
 /**
  * 保存翻译服务Map
  *
  * @param translateServiceMap 翻译服务Map
  */
 export const setTranslateServiceMap = (translateServiceMap: Map<string, any>): void => {
-  if (translateServiceMap.size > 0) {
-    const translateServiceOne = translateServiceMap.entries().next().value[0]
-    if (isNull(translateServiceOne['index'])) {
-      let index = 0
-      translateServiceMap.forEach((translateService) => {
-        translateService['index'] = index
-        index++
-      })
-    }
-    translateServiceMap.forEach((translateService) => {
-      delete translateService.serviceInfo
-    })
-  }
-  const translateServiceMapFormat = Array.from(translateServiceMap.entries())
+  const normalizedMap = normalizeTranslateServiceMap(translateServiceMap)
+  const translateServiceMapFormat = Array.from(normalizedMap.entries())
   cacheSet('translateServiceMap', translateServiceMapFormat)
   // 上面移除完毕保存后重新设置渠道信息
-  translateServiceMap.forEach((translateService) => {
+  normalizedMap.forEach((translateService) => {
     translateService['serviceInfo'] = TranslateServiceBuilder.getInfoByService(
       translateService['type']
     )
@@ -40,27 +92,17 @@ export const setTranslateServiceMap = (translateServiceMap: Map<string, any>): v
  */
 export const getTranslateServiceMap = (): Map<any, any> => {
   let map: Map<any, any> = new Map(cacheGet('translateServiceMap'))
-  if (map.size > 0) {
-    // 因为之前的版本中的数据没有 index 所以这里默认获取第一条翻译源
-    // 看是否有设置 index 如果没有默认赋值一遍
-    const translateServiceOne = map.entries().next().value[0]
-    if (isNull(translateServiceOne['index'])) {
-      setTranslateServiceMap(map)
-    }
-
-    // 修复 Papago 翻译源类型配置为 PAPAGO 问题 改为 Papago 否则会因为大小写问题导致部分代码无法匹配
-    let updatePapago = false
-    map.forEach((translateService) => {
-      if (translateService['type'] === 'PAPAGO') {
-        translateService['type'] = TranslateServiceEnum.PAPAGO
-        updatePapago = true
-      }
-    })
-    if (updatePapago) {
-      setTranslateServiceMap(map)
-    }
+  const normalizedMap = normalizeTranslateServiceMap(map)
+  if (
+    map.size !== normalizedMap.size ||
+    JSON.stringify(Array.from(map.entries())) !== JSON.stringify(Array.from(normalizedMap.entries()))
+  ) {
+    setTranslateServiceMap(normalizedMap)
+    map = new Map(cacheGet('translateServiceMap'))
+  } else if (map.size === 0) {
+    setTranslateServiceMap(normalizedMap)
+    map = new Map(cacheGet('translateServiceMap'))
   }
-  map = new Map(cacheGet('translateServiceMap'))
   // 将 Map 转换为包含键值对数组的二维数组
   const entries = Array.from(map.entries())
   // 对二维数组按照对象的 index 属性进行排序
@@ -92,7 +134,7 @@ export const getTranslateServiceMapByUse = (): Map<unknown, unknown> => {
   return translateServiceMapData
 }
 
-export const buildTranslateService = (type: any): {} => {
+export const buildTranslateService = (type: any): Record<string, any> => {
   const info: {
     name: string
     // 是否需要秘钥
@@ -146,12 +188,16 @@ export class TranslateServiceBuilder {
       .filter((key) => typeof TranslateServiceEnum[key] === 'string')
       .map((key) => TranslateServiceEnum[key])
       .forEach((code) => {
+        if (isBuiltInTranslateService(code)) {
+          return
+        }
         const channelLogoKey = Object.keys(channelLogos).find((channelLogoKey) =>
           channelLogoKey.includes(code + 'Logo')
         )
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const logo = channelLogos[channelLogoKey].default
+        if (isNull(channelLogoKey)) {
+          return
+        }
+        const logo = (channelLogos[channelLogoKey] as { default: string }).default
         TranslateServiceBuilder.translateServiceMap.set(
           code,
           TranslateServiceBuilder.buildServiceInfo(
@@ -202,13 +248,15 @@ export class TranslateServiceBuilder {
   }
 }
 
-// 获取所有翻译源配置信息 此处是异步加载 所以直接写在这里了 没有构建在方法 / 类中
-const channelConfigModules = import.meta.glob('../../../common/channel/translate/info/*.ts')
+// 获取所有翻译源配置信息。这里改为 eager 导入，避免设置页入口依赖 top-level await
+const channelConfigModules = import.meta.glob('../../../common/channel/translate/info/*.ts', {
+  eager: true
+}) as Record<string, { default: { languageList: [] } }>
 // 构建翻译语言
 for (const modulePath in channelConfigModules) {
   const moduleName = modulePath.split('/').pop().split('.')[0]
   const channelCode = moduleName.charAt(0).toUpperCase() + moduleName.slice(1).replace('Info', '')
-  const module = (await channelConfigModules[modulePath]()) as { default: { languageList: [] } }
+  const module = channelConfigModules[modulePath]
   const infoList = module.default
   TranslateServiceBuilder.translateServiceConfigInfoMap.set(channelCode, infoList)
 }

@@ -1,5 +1,5 @@
 import alimt20181012, * as $alimt20181012 from '@alicloud/alimt20181012'
-import * as $OpenApi from '@alicloud/openapi-client'
+import * as $OpenApi from '@alicloud/openapi-core'
 import * as $Util from '@alicloud/tea-util'
 import { injectAgentBySetAgentFieldName } from '../../../utils/RequestUtil'
 
@@ -8,10 +8,10 @@ import { injectAgentBySetAgentFieldName } from '../../../utils/RequestUtil'
  *
  * @param info 翻译信息
  */
-const apiTranslate = async (info) => {
+const apiTranslate = async (info): Promise<any> => {
   const configInfo = {}
   await injectAgentBySetAgentFieldName(configInfo, 'httpsProxy')
-  const config = new $OpenApi.Config({
+  const config = new $OpenApi.$OpenApiUtil.Config({
     ...configInfo,
     accessKeyId: info.appId,
     accessKeySecret: info.appKey,

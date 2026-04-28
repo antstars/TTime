@@ -5,7 +5,6 @@ import { GlobalShortcutEvent } from './service/GlobalShortcutEvent'
 import { WinEvent } from './service/Win'
 import { TrayEvent } from './service/TrayEvent'
 import log from './utils/log'
-import AutoUpdater from './service/AutoUpdater'
 import { SystemTypeEnum } from './enums/SystemTypeEnum'
 import GlobalWin from './service/GlobalWin'
 import './service/TTimeEvent'
@@ -14,7 +13,6 @@ import './service/HoverBall'
 import './service/Ocr'
 import './service/OcrSilence'
 import './service/ClipboardListenerService'
-import { initServer } from './service/WebServer'
 import './service/IpcMainHandle'
 import { injectWinAgent } from './utils/RequestUtil'
 import StoreService from './service/StoreService'
@@ -55,10 +53,8 @@ if (gotTheLock) {
   app.quit()
 }
 
-// 初始化服务
-initServer()
-
 function createWindow(): void {
+  log.debug('[主窗口] 开始创建窗口, 配置: ', JSON.stringify(mainWinInfo))
   mainWin = new BrowserWindow({
     width: mainWinInfo.width,
     height: mainWinInfo.height,
@@ -90,14 +86,18 @@ function createWindow(): void {
       webSecurity: false
     }
   })
+  log.debug('[主窗口] BrowserWindow 创建完成, ID: ', mainWin.id)
   // 禁用按下F11全屏事件
   mainWin.setFullScreenable(false)
   // mainWin.setIgnoreMouseEvents(true, { forward: true })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    log.debug('[主窗口] 开发模式, 加载URL: ', process.env['ELECTRON_RENDERER_URL'])
     mainWin.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWin.loadFile(path.join(__dirname, '../renderer/index.html'))
+    const htmlPath = path.join(__dirname, '../renderer/index.html')
+    log.debug('[主窗口] 生产模式, 加载文件: ', htmlPath)
+    mainWin.loadFile(htmlPath)
   }
 
   injectWinAgent(StoreService.configGet('agentConfig'), mainWin.webContents.session)
@@ -110,8 +110,6 @@ function createWindow(): void {
   new TrayEvent()
   // 注册全局快捷方式
   new GlobalShortcutEvent().registerAll()
-  // 自动更新逻辑
-  new AutoUpdater()
 
   /**
    * 主窗口关闭事件
@@ -129,7 +127,15 @@ function createWindow(): void {
    * 主窗口显示时触发事件
    */
   mainWin.on('show', () => {
+    log.debug('[主窗口] 窗口显示事件触发')
     mainWin.webContents.send('win-show-event')
+  })
+
+  /**
+   * 主窗口准备显示事件
+   */
+  mainWin.on('ready-to-show', () => {
+    log.debug('[主窗口] ready-to-show 事件触发')
   })
 
   /**

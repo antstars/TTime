@@ -8,27 +8,27 @@ class TranslateRecordVo {
   /**
    * 请求ID
    */
-  requestId: string
+  requestId!: string
 
   /**
    * 翻译内容
    */
-  translateContent: string
+  translateContent!: string
 
   /**
    * 翻译语言类型
    */
-  languageType: string
+  languageType!: string
 
   /**
    * 翻译结果语言类型
    */
-  languageResultType: string
+  languageResultType!: string
 
   /**
    * 翻译结果内容
    */
-  translateServiceRecordList: Array<TranslateServiceRecordVo>
+  translateServiceRecordList: Array<TranslateServiceRecordVo> = []
 
   static build(info): TranslateRecordVo {
     const translateRecordVo = new TranslateRecordVo()

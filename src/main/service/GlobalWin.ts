@@ -83,8 +83,10 @@ class GlobalWin {
    */
   static winShow(win): void {
     if (isNull(win)) {
+      log.warn('[GlobalWin] winShow: 窗口为空, 无法显示')
       return
     }
+    log.debug('[GlobalWin] winShow: 执行 win.show()')
     win.show()
   }
 
@@ -123,13 +125,16 @@ class GlobalWin {
    * 显示主窗口
    */
   static mainWinShow(): void {
+    log.debug('[GlobalWin] mainWinShow: 开始显示主窗口')
     const translateShowPositionType = StoreService.configGet('translateShowPositionType')
+    log.debug('[GlobalWin] mainWinShow: 显示位置类型 = ', translateShowPositionType)
     if (TranslateShowPositionEnum.LAST_TIME === translateShowPositionType) {
       GlobalWin.winShow(GlobalWin.mainWin)
       this.mainOrOcrWinShowCallback()
     } else if (TranslateShowPositionEnum.FOLLOW_MOUSE === translateShowPositionType) {
       // 获取到鼠标的横坐标和纵坐标
       const { x, y } = screen.getCursorScreenPoint()
+      log.debug('[GlobalWin] mainWinShow: 跟随鼠标模式, 鼠标位置 = ', x, y)
       // 设置坐标的同时设置宽高 否则在多显示器且显示器之间缩放比例不一致的情况下来回切换会导致悬浮球显示错位
       GlobalWin.mainWin.setBounds({ x: x, y: y + 11 })
       GlobalWin.winShow(GlobalWin.mainWin)
@@ -142,6 +147,7 @@ class GlobalWin {
       const winWidth = GlobalWin.mainWin.getSize()[0]
       const x = activeBounds.x + (activeBounds.width - winWidth) / 2
       const y = activeBounds.y + (activeBounds.height - 339) / 2
+      log.debug('[GlobalWin] mainWinShow: 从顶部显示模式, 计算位置 = ', x, y)
       try {
         GlobalWin.mainWin.setPosition(
           Math.floor(x),
@@ -417,13 +423,8 @@ class GlobalWin {
   /**
    * 强制显示设置窗口
    */
-  static forceShowSetWin() {
-    if (isNull(GlobalWin.setWin)) {
-      createSetWindow()
-    }
-    GlobalWin.winShow(GlobalWin.setWin)
-    GlobalWin.setWin.focus()
-    GlobalWin.setWin.webContents.send('refresh-user-info-event')
+  static forceShowSetWin(): void {
+    createSetWindow()
   }
 
 }

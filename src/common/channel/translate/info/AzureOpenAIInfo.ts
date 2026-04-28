@@ -6,9 +6,11 @@ export default {
   isOneAppKey: true,
   // 构建时默认信息
   defaultInfo: {
-    model: 'gpt-3.5-turbo',
+    model: '',
     endpoint: '',
-    deploymentName: ''
+    deploymentName: '',
+    inputLanguageType: '',
+    languageResultTypeCustom: ''
   },
   // 翻译语言
   languageList: [
