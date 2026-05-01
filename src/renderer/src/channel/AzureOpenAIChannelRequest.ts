@@ -217,104 +217,106 @@ class AzureOpenAIChannelRequest {
       )
     )
     let text = ''
-    await fetchEventSource(
-      info.endpoint +
-        '/openai/deployments/' +
-        info.deploymentName +
-        '/chat/completions?api-version=2023-05-15',
-      {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': `${info.appKey}`
-        },
-        async onopen(response) {
-          if (
-            response.ok &&
-            response.headers.get('content-type').indexOf(EventStreamContentType) !== -1
-          ) {
-            return // everything's good
-          } else {
+    let hasError = false
+    const sendErrorOnce = (error): void => {
+      if (hasError) {
+        return
+      }
+      hasError = true
+      window.api['agentApiTranslateCallback'](
+        R.errorD(
+          new AgentTranslateCallbackVo(info, {
+            code: OpenAIStatusEnum.ERROR,
+            error
+          })
+        )
+      )
+    }
+    try {
+      await fetchEventSource(
+        info.endpoint +
+          '/openai/deployments/' +
+          info.deploymentName +
+          '/chat/completions?api-version=2023-05-15',
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': `${info.appKey}`
+          },
+          async onopen(response) {
+            const contentType = response.headers.get('content-type') ?? ''
+            if (response.ok && contentType.indexOf(EventStreamContentType) !== -1) {
+              return // everything's good
+            }
             window.api.logInfoEvent('[AzureOpenAI翻译事件] - error 连接失败 :', {
               status: response.status,
               statusText: response.statusText
             })
-            window.api['agentApiTranslateCallback'](
-              R.errorD(
-                new AgentTranslateCallbackVo(info, {
-                  code: OpenAIStatusEnum.ERROR,
-                  error: '连接失败'
-                })
-              )
-            )
-          }
-        },
-        onmessage(msg) {
-          // console.log('value = ', msg.data)
-          const value = msg.data
-          try {
-            const dataArray = value.split('data: ')
-            dataArray.forEach((data) => {
-              data = data.trim().replace(/data:/g, '')
-              if (isNull(data) || data === '[DONE]') {
-                return
-              }
-              data = JSON.parse(data)
-              if (isNotNull(data['error'])) {
+            sendErrorOnce('连接失败')
+            throw new Error('连接失败')
+          },
+          onmessage(msg) {
+            // console.log('value = ', msg.data)
+            const value = msg.data
+            try {
+              const dataArray = value.split('data: ')
+              dataArray.forEach((data) => {
+                data = data.trim().replace(/data:/g, '')
+                if (isNull(data) || data === '[DONE]') {
+                  return
+                }
+                data = JSON.parse(data)
+                if (isNotNull(data['error'])) {
+                  sendErrorOnce(data)
+                  throw data
+                }
+                let content = data['choices'][0]['delta']['content']
+                if (isNull(content)) {
+                  return
+                }
+                content = quoteProcessor.processText(content)
+                text += content
                 window.api['agentApiTranslateCallback'](
-                  R.errorD(
+                  R.okD(
                     new AgentTranslateCallbackVo(info, {
-                      code: OpenAIStatusEnum.ERROR,
-                      error: data
+                      code: OpenAIStatusEnum.ING,
+                      content: content
                     })
                   )
                 )
-                return
+              })
+            } catch (e) {
+              if (isNotNull(e?.error)) {
+                throw e
               }
-              let content = data['choices'][0]['delta']['content']
-              if (isNull(content)) {
-                return
-              }
-              content = quoteProcessor.processText(content)
-              text += content
-              window.api['agentApiTranslateCallback'](
-                R.okD(
-                  new AgentTranslateCallbackVo(info, {
-                    code: OpenAIStatusEnum.ING,
-                    content: content
-                  })
-                )
+              window.api.logErrorEvent('[AzureOpenAI翻译事件] - parse error : ', text, msg)
+            }
+          },
+          onclose() {
+            if (hasError) {
+              return
+            }
+            window.api['agentApiTranslateCallback'](
+              R.okD(
+                new AgentTranslateCallbackVo(info, {
+                  code: OpenAIStatusEnum.END
+                })
               )
-            })
-          } catch (e) {
-            window.api.logErrorEvent('[AzureOpenAI翻译事件] - parse error : ', text, msg)
+            )
+            window.api.logInfoEvent('[AzureOpenAI翻译事件] - 响应报文 : ', text)
+          },
+          onerror(err) {
+            window.api.logInfoEvent('[AzureOpenAI翻译事件] - error {}', err)
+            sendErrorOnce(err)
+            throw err
           }
-        },
-        onclose() {
-          window.api['agentApiTranslateCallback'](
-            R.okD(
-              new AgentTranslateCallbackVo(info, {
-                code: OpenAIStatusEnum.END
-              })
-            )
-          )
-          window.api.logInfoEvent('[AzureOpenAI翻译事件] - 响应报文 : ', text)
-        },
-        onerror(err) {
-          window.api.logInfoEvent('[AzureOpenAI翻译事件] - error {}', err)
-          window.api['agentApiTranslateCallback'](
-            R.errorD(
-              new AgentTranslateCallbackVo(info, {
-                code: OpenAIStatusEnum.ERROR,
-                error: err
-              })
-            )
-          )
-          throw err
         }
-      }
-    )
+      )
+    } catch (error) {
+      sendErrorOnce(error instanceof Error ? error.message : error)
+    }
   }
 
   /**

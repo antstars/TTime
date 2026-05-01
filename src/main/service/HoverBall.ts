@@ -10,6 +10,7 @@ import { YesNoEnum } from '../../common/enums/YesNoEnum'
 import { isNotNull } from '../../common/utils/validate'
 import { spawn } from 'child_process'
 import StoreService from './StoreService'
+import { startUIOHook } from '../utils/uIOhookUtil'
 
 if (!SystemTypeEnum.isMac()) {
 
@@ -64,7 +65,7 @@ if (!SystemTypeEnum.isMac()) {
     GlobalWin.setHoverBallWin(hoverBallWin)
   }
 
-  uIOhook.start()
+  startUIOHook()
 
   let mousedownInfo: UiohookMouseEvent
 
@@ -162,7 +163,10 @@ if (!SystemTypeEnum.isMac()) {
   /**
    * 悬浮球取词
    */
-  ipcMain.handle('hover-ball-events', (_event, _) => {
+  ipcMain.handle('hover-ball-events', async (_event, _) => {
+    if (GlobalShortcutEvent.isChoice) {
+      return
+    }
     log.info('[悬浮球取词] - 开始')
     hoverBallWinHide()
     // 先释放按键
@@ -177,15 +181,27 @@ if (!SystemTypeEnum.isMac()) {
     uIOhook.keyToggle(UiohookKey.MetaRight, 'up')
     uIOhook.keyToggle(UiohookKey.Tab, 'up')
     uIOhook.keyToggle(UiohookKey.Escape, 'up')
-    GlobalShortcutEvent.isChoice = true
-    GlobalShortcutEvent.getSelectedText().then((selectedText) => {
-      GlobalShortcutEvent.isChoice = false
+    try {
+      GlobalShortcutEvent.isChoice = true
+      let selectedText = await GlobalShortcutEvent.getSelectedText()
+      if (GlobalShortcutEvent.isBlankText(selectedText)) {
+        log.info('[悬浮球取词] - 本次复制选区为空，已跳过翻译')
+        return
+      }
       selectedText = GlobalShortcutEvent.splitSingleCamelCase(selectedText)
       selectedText = GlobalShortcutEvent.splitSingleUnderScore(selectedText)
+      if (GlobalShortcutEvent.isBlankText(selectedText)) {
+        log.info('[悬浮球取词] - 本次复制选区处理后为空，已跳过翻译')
+        return
+      }
       // 推送给Vue页面进行更新翻译输入内容
       GlobalWin.mainWinUpdateTranslatedContent(selectedText)
       GlobalWin.mainWinShow()
-    })
+    } catch (error) {
+      log.error('[悬浮球取词] - 获取选中文本失败 : ', error)
+    } finally {
+      GlobalShortcutEvent.isChoice = false
+    }
   })
 
   let hoverBallWinHideTask

@@ -8,9 +8,9 @@ import { isNull } from '../../../common/utils/validate'
  * @return 错误响应内容
  */
 export const commonError = (title, err): string => {
-  const errCode = err.code
-  const errMessage = err.message
-  const response = isNull(err.response) ? {} : err.response
+  const errCode = err?.code
+  const errMessage = getErrorMessage(err)
+  const response = isNull(err?.response) ? {} : err.response
   const errResponseStatus = response.status
   const errResponseStatusText = response.statusText
   const errResponseData = response.data
@@ -19,8 +19,7 @@ export const commonError = (title, err): string => {
     errMessage: errMessage,
     errResponseStatus: errResponseStatus,
     errResponseStatusText: errResponseStatusText,
-    errResponseData:
-      typeof errResponseData === 'object' ? JSON.stringify(errResponseData) : errResponseData
+    errResponseData: stringifyErrorData(errResponseData)
   })
   const errResponseDataMessage = isNull(errResponseData)
     ? ''
@@ -51,4 +50,28 @@ export const commonError = (title, err): string => {
     msg = isNull(errResponseDataMessage) ? errMessage : errResponseDataMessage
   }
   return msg
+}
+
+const getErrorMessage = (err): string => {
+  if (!isNull(err?.message)) {
+    return String(err.message)
+  }
+  if (typeof err === 'string') {
+    return err
+  }
+  return isNull(err) ? '' : stringifyErrorData(err)
+}
+
+const stringifyErrorData = (data): string => {
+  if (isNull(data)) {
+    return ''
+  }
+  if (typeof data !== 'object') {
+    return String(data)
+  }
+  try {
+    return JSON.stringify(data)
+  } catch {
+    return String(data)
+  }
 }
