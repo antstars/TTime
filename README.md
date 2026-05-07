@@ -4,9 +4,9 @@
 
   🚀 一款简洁高效的输入、截图、划词翻译软件
 
-  <a href="https://ttime.timerecord.cn"><img src="https://img.shields.io/badge/%E5%AE%98%E6%96%B9%E7%BD%91%E7%AB%99-ttime.timerecord.cn-brightgreen?logo=Safari"/></a>
-  <a href="https://ttime.timerecord.cn"><img src="https://img.shields.io/badge/-Windows-blue?logo=windows&logoColor=white" /></a>
-  <a href="https://ttime.timerecord.cn"><img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white" /></a>
+  <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/%E5%AE%98%E6%96%B9%E7%BD%91%E7%AB%99-ttime.timerecord.cn-brightgreen?logo=Safari"/></a>
+  <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-Windows-blue?logo=windows&logoColor=white" /></a>
+  <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white" /></a>
 
   (中文 | [English](README.en.md))
 
@@ -42,7 +42,7 @@
 | 截图静默OCR | 按下此快捷键将会根据你截图区域进行文字识别，识别的内容自动写入剪贴板不会打开OCR窗口 | ![截图静默OCR](https://raw.githubusercontent.com/InkTimeRecord/TTime/dev/README.assets/screenshot-silence-ocr.gif) |
 
 ## 目前已集成翻译/文字识别服务
-[翻译源/文字识别申请参考](https://ttime.timerecord.cn/pages/93e0f8/#%E7%BF%BB%E8%AF%91%E6%BA%90%E4%BB%8B%E7%BB%8D)
+[翻译源/文字识别申请参考](https://github.com/antstars/TTime/pages/93e0f8/#%E7%BF%BB%E8%AF%91%E6%BA%90%E4%BB%8B%E7%BB%8D)
 
 - [x] 翻译源
   - [x] TTime (内置)

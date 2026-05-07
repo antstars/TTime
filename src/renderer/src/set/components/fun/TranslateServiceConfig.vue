@@ -29,7 +29,7 @@ import { ServiceTypeEnum } from '../../../../../common/enums/ServiceTypeEnum'
 const menuIndex = ref(ServiceTypeEnum.TRANSLATE)
 
 const toPageTranslateServiceApply = (): void => {
-  window.api.jumpToPage('https://ttime.timerecord.cn/pages/482152/')
+  window.api.jumpToPage('https://github.com/antstars/TTime/pages/482152/')
 }
 </script>
 

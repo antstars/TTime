@@ -5,9 +5,9 @@
 
   🚀 A concise, efficient, good-looking input, screenshot, and word translation software
 
-  <a href="https://ttime.timerecord.cn"><img src="https://img.shields.io/badge/Official website-ttime.timerecord.cn-brightgreen?logo=Safari"/></a>
-  <a href="https://ttime.timerecord.cn"><img src="https://img.shields.io/badge/-Windows-blue?logo=windows&logoColor=white" /></a>
-  <a href="https://ttime.timerecord.cn"><img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white" /></a>
+  <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/Official website-ttime.timerecord.cn-brightgreen?logo=Safari"/></a>
+  <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-Windows-blue?logo=windows&logoColor=white" /></a>
+  <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white" /></a>
 
   (English | [中文](README.md))
 
@@ -43,7 +43,7 @@ The main functions are `input translation`, `screenshot translation`, `selected 
 | Screenshot Silence OCR | Pressing this shortcut key will recognize the text according to your screenshot area, and the recognized content will be automatically written into the clipboard without opening the OCR window | ![Screenshot Silence OCR](https://raw.githubusercontent.com/InkTimeRecord/TTime/dev/README.assets/screenshot-silence-ocr.gif) |
 
 ## Currently, integrated with translation/text recognition services
-[Translation source/text recognition application reference](https://ttime.timerecord.cn/pages/93e0f8/#%E7%BF%BB%E8%AF%91%E6%BA%90%E4%BB%8B%E7%BB%8D)
+[Translation source/text recognition application reference](https://github.com/antstars/TTime/pages/93e0f8/#%E7%BF%BB%E8%AF%91%E6%BA%90%E4%BB%8B%E7%BB%8D)
 
 - [x] Translation source
   - [x] TTime (built-in)

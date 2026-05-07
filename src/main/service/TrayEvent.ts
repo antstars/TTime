@@ -52,7 +52,7 @@ class TrayEvent {
       {
         label: '使用教程',
         click: (): void => {
-          shell.openExternal('https://ttime.timerecord.cn')
+          shell.openExternal('https://github.com/antstars/TTime')
         }
       },
       {

@@ -1,6 +1,6 @@
 !define APP_NAME "TTime"
-!define MUI_FINISHPAGE_LINK "官方网站 : https://ttime.timerecord.cn"
-!define MUI_FINISHPAGE_LINK_LOCATION "https://ttime.timerecord.cn"
+!define MUI_FINISHPAGE_LINK "官方网站 : https://github.com/antstars/TTime"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://github.com/antstars/TTime"
 
 ; 开机自启配置必须在 BUILD_UNINSTALLER 这里面加载 否则打包时会报错
 !ifndef BUILD_UNINSTALLER

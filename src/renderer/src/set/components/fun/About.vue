@@ -27,10 +27,10 @@ import { ref } from 'vue'
 const version = ref(window.api.getVersionEvent())
 
 const list = ref([
-  { url: 'https://ttime.timerecord.cn', val: '官网网站 ：https://ttime.timerecord.cn' },
+  { url: 'https://github.com/antstars/TTime', val: '官网网站 ：https://github.com/antstars/TTime' },
   {
-    url: 'https://github.com/InkTimeRecord/TTime',
-    val: 'GitHub : https://github.com/InkTimeRecord/TTime'
+    url: 'https://github.com/antstars/TTime',
+    val: 'GitHub : https://github.com/antstars/TTime'
   }
 ])
 

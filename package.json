@@ -4,7 +4,7 @@
   "description": "一款简洁、高效、高颜值的输入、截图、划词翻译软件",
   "main": "./out/main/index.js",
   "author": "byliangcheng",
-  "homepage": "https://ttime.timerecord.cn/",
+  "homepage": "https://github.com/antstars/TTime/",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts,.vue --fix",
