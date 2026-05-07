@@ -5,7 +5,6 @@
 
   🚀 A concise, efficient, good-looking input, screenshot, and word translation software
 
-  <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/Official website-ttime.timerecord.cn-brightgreen?logo=Safari"/></a>
   <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-Windows-blue?logo=windows&logoColor=white" /></a>
   <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white" /></a>
 
