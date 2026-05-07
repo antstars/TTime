@@ -73,8 +73,8 @@ const apiCheckOcrCallbackEvent = (callback): void => {
  *
  * @param agentConfig 代理配置
  */
-const agentUpdateEvent = (agentConfig): void => {
-  ipcRenderer.invoke('agent-update-event', agentConfig)
+const agentUpdateEvent = (agentConfig): Promise<R> => {
+  return ipcRenderer.invoke('agent-update-event', agentConfig)
 }
 
 /**

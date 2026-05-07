@@ -53,7 +53,7 @@ if (gotTheLock) {
   app.quit()
 }
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
   log.debug('[主窗口] 开始创建窗口, 配置: ', JSON.stringify(mainWinInfo))
   mainWin = new BrowserWindow({
     width: mainWinInfo.width,
@@ -91,6 +91,14 @@ function createWindow(): void {
   mainWin.setFullScreenable(false)
   // mainWin.setIgnoreMouseEvents(true, { forward: true })
 
+  const agentRes = await injectWinAgent(
+    StoreService.configGet('agentConfig'),
+    mainWin.webContents.session
+  )
+  if (agentRes.code !== 1) {
+    log.error('[主窗口] 初始代理设置失败 : ', agentRes.msg)
+  }
+
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     log.debug('[主窗口] 开发模式, 加载URL: ', process.env['ELECTRON_RENDERER_URL'])
     mainWin.loadURL(process.env['ELECTRON_RENDERER_URL'])
@@ -99,8 +107,6 @@ function createWindow(): void {
     log.debug('[主窗口] 生产模式, 加载文件: ', htmlPath)
     mainWin.loadFile(htmlPath)
   }
-
-  injectWinAgent(StoreService.configGet('agentConfig'), mainWin.webContents.session)
 
   // mainWin.webContents.openDevTools({ mode: 'detach' })
   GlobalWin.setMainWin(mainWin)
@@ -154,7 +160,7 @@ function createWindow(): void {
   })
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.ttime')
 
@@ -164,10 +170,10 @@ app.whenReady().then(() => {
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
-  createWindow()
+  await createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      createWindow().then()
     }
   })
 

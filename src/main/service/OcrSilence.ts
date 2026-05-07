@@ -4,6 +4,7 @@ import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import path from 'path'
 import { is } from '@electron-toolkit/utils'
 import GlobalWin from './GlobalWin'
+import { startUIOHook } from '../utils/uIOhookUtil'
 
 // 窗口加载完毕后执行
 app.whenReady().then(() => {
@@ -56,7 +57,7 @@ function createOcrSilenceWin(): void {
   GlobalWin.setOcrSilenceWin(ocrSilenceWin)
 }
 
-uIOhook.start()
+startUIOHook()
 
 /**
  * 滚动鼠标时关闭加载窗口

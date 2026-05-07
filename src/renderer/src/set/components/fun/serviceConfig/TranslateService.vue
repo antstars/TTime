@@ -263,7 +263,7 @@
   </div>
 </template>
 <script setup lang='ts'>
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import draggable from 'vuedraggable'
 import { Minus, Plus } from '@element-plus/icons-vue'
 
@@ -283,6 +283,24 @@ import { normalizeOpenAIRequestUrlPrefix } from '../../../../channel/OpenAIProto
 
 // 翻译服务验证状态
 const checkIngStatus = ref(false)
+const TRANSLATE_SERVICE_CHECK_TIMEOUT = 5000
+
+let translateServiceCheckToken = 0
+let translateServiceCheckTimer: ReturnType<typeof setTimeout> | null = null
+const activeTranslateServiceCheck = ref<{ id: string; token: number } | null>(null)
+
+const clearTranslateServiceCheckTimer = (): void => {
+  if (translateServiceCheckTimer !== null) {
+    clearTimeout(translateServiceCheckTimer)
+    translateServiceCheckTimer = null
+  }
+}
+
+const resetTranslateServiceCheck = (): void => {
+  clearTranslateServiceCheckTimer()
+  activeTranslateServiceCheck.value = null
+  checkIngStatus.value = false
+}
 
 const translateServiceStatusTag = computed(() => {
   if (checkIngStatus.value) {
@@ -380,8 +398,7 @@ selectOneServiceThis()
  */
 const selectTranslateService = (translateService: any): void => {
   translateServiceThis.value = translateService
-  // 开启翻译服务验证加载状态
-  checkIngStatus.value = false
+  resetTranslateServiceCheck()
 }
 
 /**
@@ -390,6 +407,7 @@ const selectTranslateService = (translateService: any): void => {
  * @param type 翻译类型
  */
 const addTranslateService = (type: string): void => {
+  resetTranslateServiceCheck()
   const service: any = buildTranslateService(type)
   if (null !== service) {
     saveService(service)
@@ -403,6 +421,7 @@ const addTranslateService = (type: string): void => {
  * 删除翻译服务
  */
 const deleteTranslateService = (): void => {
+  resetTranslateServiceCheck()
   const insideTranslateServiceMap = getTranslateServiceMap()
   insideTranslateServiceMap.delete(translateServiceThis.value.id)
   setTranslateServiceMap(insideTranslateServiceMap)
@@ -446,15 +465,41 @@ const translateServiceCheckAndSave = (): void => {
       info[key] = value[key]
     })
   }
-  window.api.apiUniteTranslateCheck(value.type, info)
+  clearTranslateServiceCheckTimer()
+  const currentToken = ++translateServiceCheckToken
+  activeTranslateServiceCheck.value = {
+    id: value.id,
+    token: currentToken
+  }
   // 开启翻译服务验证加载状态
   checkIngStatus.value = true
+  translateServiceCheckTimer = setTimeout(() => {
+    const activeCheck = activeTranslateServiceCheck.value
+    if (
+      activeCheck?.id !== value.id ||
+      activeCheck?.token !== currentToken ||
+      !checkIngStatus.value
+    ) {
+      return
+    }
+    resetTranslateServiceCheck()
+    ElMessageExtend.warning('验证超时，请检查网络或密钥是否可用')
+  }, TRANSLATE_SERVICE_CHECK_TIMEOUT)
+  window.api.apiUniteTranslateCheck(value.type, info)
 }
 
 /**
  * 翻译服务验证回调 - translateServiceCheckAndSave 触发后结果回调到这里
  */
 window.api.apiCheckTranslateCallbackEvent((type, res) => {
+  if (!checkIngStatus.value || isNull(activeTranslateServiceCheck.value)) {
+    return
+  }
+  if (isNull(res?.data?.id) || res.data.id !== activeTranslateServiceCheck.value.id) {
+    return
+  }
+  clearTranslateServiceCheckTimer()
+  activeTranslateServiceCheck.value = null
   // 关闭翻译服务验证加载状态
   checkIngStatus.value = false
   if (isNull(res) || isNull(res.data)) {
@@ -509,6 +554,10 @@ window.api.apiCheckTranslateCallbackEvent((type, res) => {
   }
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
+})
+
+onUnmounted(() => {
+  resetTranslateServiceCheck()
 })
 
 /**

@@ -319,61 +319,77 @@ class OpenAIChannelRequest {
     const { data, quoteProcessor, requestUrl } = requestInfo
     OpenAIChannelRequest.sendTranslateStart(info)
     let text = ''
-
-    await fetchEventSource(requestUrl, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${info.appKey}`
-      },
-      async onopen(response) {
-        const contentType = response.headers.get('content-type') ?? ''
-        if (response.ok && contentType.indexOf(EventStreamContentType) !== -1) {
-          return
-        }
-        window.api.logInfoEvent('[OpenAI翻译事件] - error 连接失败 :', {
-          status: response.status,
-          statusText: response.statusText
-        })
-        OpenAIChannelRequest.sendTranslateError(info, '连接失败')
-      },
-      onmessage(msg) {
-        if (msg.data === '[DONE]') {
-          return
-        }
-        try {
-          const data = JSON.parse(msg.data)
-          const requestProtocol = getOpenAIRequestProtocol(info.requestProtocol)
-          const content =
-            requestProtocol === OpenAIProtocolEnum.RESPONSES
-              ? OpenAIChannelRequest.parseResponsesEvent(data)
-              : OpenAIChannelRequest.parseChatCompletionsEvent(data, quoteProcessor)
-          if (isNull(content)) {
-            return
-          }
-          text += content
-          if (content !== '') {
-            OpenAIChannelRequest.sendTranslateDelta(info, content)
-          }
-        } catch (error) {
-          if (isNotNull(error?.error) || isNotNull(error?.message)) {
-            OpenAIChannelRequest.sendTranslateError(info, error)
-            return
-          }
-          window.api.logErrorEvent('[OpenAI翻译事件] - parse error : ', text, msg)
-        }
-      },
-      onclose() {
-        OpenAIChannelRequest.sendTranslateEnd(info)
-        window.api.logInfoEvent('[OpenAI翻译事件] - 响应报文 : ', text)
-      },
-      onerror(err) {
-        window.api.logInfoEvent('[OpenAI翻译事件] - error {}', err)
-        OpenAIChannelRequest.sendTranslateError(info, err)
-        throw err
+    let hasError = false
+    const sendErrorOnce = (error): void => {
+      if (hasError) {
+        return
       }
-    })
+      hasError = true
+      OpenAIChannelRequest.sendTranslateError(info, error)
+    }
+
+    try {
+      await fetchEventSource(requestUrl, {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${info.appKey}`
+        },
+        async onopen(response) {
+          const contentType = response.headers.get('content-type') ?? ''
+          if (response.ok && contentType.indexOf(EventStreamContentType) !== -1) {
+            return
+          }
+          window.api.logInfoEvent('[OpenAI翻译事件] - error 连接失败 :', {
+            status: response.status,
+            statusText: response.statusText
+          })
+          sendErrorOnce('连接失败')
+          throw new Error('连接失败')
+        },
+        onmessage(msg) {
+          if (msg.data === '[DONE]') {
+            return
+          }
+          try {
+            const data = JSON.parse(msg.data)
+            const requestProtocol = getOpenAIRequestProtocol(info.requestProtocol)
+            const content =
+              requestProtocol === OpenAIProtocolEnum.RESPONSES
+                ? OpenAIChannelRequest.parseResponsesEvent(data)
+                : OpenAIChannelRequest.parseChatCompletionsEvent(data, quoteProcessor)
+            if (isNull(content)) {
+              return
+            }
+            text += content
+            if (content !== '') {
+              OpenAIChannelRequest.sendTranslateDelta(info, content)
+            }
+          } catch (error) {
+            if (isNotNull(error?.error)) {
+              sendErrorOnce(error)
+              throw error
+            }
+            window.api.logErrorEvent('[OpenAI翻译事件] - parse error : ', text, msg)
+          }
+        },
+        onclose() {
+          if (hasError) {
+            return
+          }
+          OpenAIChannelRequest.sendTranslateEnd(info)
+          window.api.logInfoEvent('[OpenAI翻译事件] - 响应报文 : ', text)
+        },
+        onerror(err) {
+          window.api.logInfoEvent('[OpenAI翻译事件] - error {}', err)
+          sendErrorOnce(err)
+          throw err
+        }
+      })
+    } catch (error) {
+      sendErrorOnce(error instanceof Error ? error.message : error)
+    }
   }
 
   /**

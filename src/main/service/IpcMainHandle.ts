@@ -4,10 +4,11 @@ import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import { isNull } from '../../common/utils/validate'
 import log from '../utils/log'
 import GlobalWin from './GlobalWin'
-import { injectWinAgent } from '../utils/RequestUtil'
+import { injectWinAgent, normalizeAgentConfig } from '../utils/RequestUtil'
 import { StoreConfigFunTypeEnum } from '../../common/enums/StoreConfigFunTypeEnum'
 import StoreService from './StoreService'
 import { StoreTypeEnum } from '../../common/enums/StoreTypeEnum'
+import R from '../../common/class/R'
 
 /**
  * 打开设置页面
@@ -67,8 +68,16 @@ ipcMain.on('get-version-event', (event) => {
 /**
  * 代理更新事件
  */
-ipcMain.handle('agent-update-event', (_event, agentConfig) => {
-  injectWinAgent(agentConfig, GlobalWin.mainWin.webContents.session)
+ipcMain.handle('agent-update-event', async (_event, agentConfig) => {
+  if (isNull(GlobalWin.mainWin)) {
+    return R.error('主窗口未初始化，代理设置失败')
+  }
+  const normalizedAgentConfig = normalizeAgentConfig(agentConfig)
+  const res = await injectWinAgent(normalizedAgentConfig, GlobalWin.mainWin.webContents.session)
+  if (res.code === R.SUCCESS) {
+    StoreService.configSet('agentConfig', normalizedAgentConfig)
+  }
+  return res
 })
 
 /**

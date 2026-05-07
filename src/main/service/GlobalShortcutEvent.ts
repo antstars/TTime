@@ -10,10 +10,14 @@ import { uIOhook, UiohookKey } from 'uiohook-napi'
 import OcrTypeEnum from '../enums/OcrTypeEnum'
 import StoreService from './StoreService'
 import { YesNoEnum } from '../../common/enums/YesNoEnum'
+import { startUIOHook } from '../utils/uIOhookUtil'
 
-uIOhook.start()
+startUIOHook()
 
 const isMac = SystemTypeEnum.isMac()
+const DEFAULT_TRANSLATE_CHOICE_DELAY = 600
+const MIN_TRANSLATE_CHOICE_DELAY = 100
+const MAX_TRANSLATE_CHOICE_DELAY = 1000
 
 /**
  * 全局快捷键
@@ -45,6 +49,16 @@ class GlobalShortcutEvent {
    * 是否划词中
    */
   static isChoice = false
+
+  /**
+   * 是否正在执行应用内部复制取词
+   */
+  private static isInternalCopying = false
+
+  /**
+   * 剪贴板监听抑制截止时间
+   */
+  private static clipboardListenerSuppressUntil = 0
 
   /**
    * 全局快捷键列表
@@ -199,7 +213,7 @@ class GlobalShortcutEvent {
   /**
    * 划词翻译快捷键
    */
-  static translateChoice = (): void => {
+  static translateChoice = async (): Promise<void> => {
     if (GlobalShortcutEvent.isChoice) {
       return
     }
@@ -215,16 +229,27 @@ class GlobalShortcutEvent {
     uIOhook.keyToggle(UiohookKey.MetaRight, 'up')
     uIOhook.keyToggle(UiohookKey.Tab, 'up')
     uIOhook.keyToggle(UiohookKey.Escape, 'up')
-    GlobalShortcutEvent.isChoice = true
-    const printSelectedText = (selectedText): void => {
-      GlobalShortcutEvent.isChoice = false
+    try {
+      GlobalShortcutEvent.isChoice = true
+      let selectedText = await GlobalShortcutEvent.getSelectedText()
+      if (GlobalShortcutEvent.isBlankText(selectedText)) {
+        log.info('[划词翻译] - 本次复制选区为空，已跳过翻译')
+        return
+      }
       selectedText = GlobalShortcutEvent.splitSingleCamelCase(selectedText)
       selectedText = GlobalShortcutEvent.splitSingleUnderScore(selectedText)
+      if (GlobalShortcutEvent.isBlankText(selectedText)) {
+        log.info('[划词翻译] - 本次复制选区处理后为空，已跳过翻译')
+        return
+      }
       // 推送给Vue页面进行更新翻译输入内容
       GlobalWin.mainWinUpdateTranslatedContent(selectedText)
       GlobalWin.mainWinShow()
+    } catch (error) {
+      log.error('[划词翻译] - 获取选中文本失败 : ', error)
+    } finally {
+      GlobalShortcutEvent.isChoice = false
     }
-    GlobalShortcutEvent.getSelectedText().then(printSelectedText)
   }
 
   /**
@@ -255,22 +280,70 @@ class GlobalShortcutEvent {
     }
   }
 
+  static isClipboardListenerSuppressed = (): boolean => {
+    return (
+      GlobalShortcutEvent.isInternalCopying ||
+      Date.now() < GlobalShortcutEvent.clipboardListenerSuppressUntil
+    )
+  }
+
+  private static startInternalCopy = (suppressMilliseconds: number): void => {
+    GlobalShortcutEvent.isInternalCopying = true
+    GlobalShortcutEvent.clipboardListenerSuppressUntil = Date.now() + suppressMilliseconds
+  }
+
+  private static stopInternalCopy = (): void => {
+    GlobalShortcutEvent.isInternalCopying = false
+    GlobalShortcutEvent.clipboardListenerSuppressUntil = Date.now() + 500
+  }
+
+  private static releaseCopyKey = (): void => {
+    try {
+      robot.keyToggle('c', 'up', isMac ? 'command' : 'control')
+    } catch (error) {
+      log.error('[划词翻译] - 释放复制按键失败 : ', error)
+    }
+  }
+
+  static isBlankText = (text): boolean => {
+    return text === undefined || text === null || String(text).trim() === ''
+  }
+
+  private static getTranslateChoiceDelay = (): number => {
+    const delayConfig = Number(StoreService.configGet('translateChoiceDelay'))
+    const delay = Number.isFinite(delayConfig) ? delayConfig : DEFAULT_TRANSLATE_CHOICE_DELAY
+    return Math.floor(
+      Math.min(Math.max(delay, MIN_TRANSLATE_CHOICE_DELAY), MAX_TRANSLATE_CHOICE_DELAY) / 2
+    )
+  }
+
   static getSelectedText = async (): Promise<string> => {
-    const translateChoiceDelay = Math.floor(StoreService.configGet('translateChoiceDelay') / 2)
+    const translateChoiceDelay = GlobalShortcutEvent.getTranslateChoiceDelay()
     GlobalWin.mainWinSend('clear-all-translated-content')
-    const currentClipboardContent = clipboard.readText()
-    log.info('[划词翻译] - 读取剪贴板原文本 : ', currentClipboardContent)
-    clipboard.clear()
-    await new Promise((resolve) => setTimeout(resolve, translateChoiceDelay))
-    log.info('[划词翻译] - 执行复制操作')
-    robot.keyToggle('c', 'down', isMac ? 'command' : 'control')
-    await new Promise((resolve) => setTimeout(resolve, translateChoiceDelay))
-    robot.keyToggle('c', 'up', isMac ? 'command' : 'control')
-    const selectedText = clipboard.readText()
-    log.info('[划词翻译] - 读取新复制的内容 : ', selectedText)
-    clipboard.writeText(currentClipboardContent)
-    GlobalShortcutEvent.isChoice = false
-    return selectedText
+    let currentClipboardContent = ''
+    let hasClipboardSnapshot = false
+    let selectedText = ''
+    GlobalShortcutEvent.startInternalCopy(translateChoiceDelay * 4 + 1000)
+    try {
+      currentClipboardContent = clipboard.readText()
+      hasClipboardSnapshot = true
+      log.info('[划词翻译] - 读取剪贴板旧文本快照 : ', currentClipboardContent)
+      clipboard.clear()
+      await new Promise((resolve) => setTimeout(resolve, translateChoiceDelay))
+      log.info('[划词翻译] - 执行复制选区操作')
+      robot.keyToggle('c', 'down', isMac ? 'command' : 'control')
+      await new Promise((resolve) => setTimeout(resolve, translateChoiceDelay))
+      robot.keyToggle('c', 'up', isMac ? 'command' : 'control')
+      selectedText = clipboard.readText()
+      log.info('[划词翻译] - 读取本次复制选区内容 : ', selectedText)
+    } finally {
+      GlobalShortcutEvent.releaseCopyKey()
+      if (hasClipboardSnapshot) {
+        clipboard.writeText(currentClipboardContent)
+      }
+      GlobalShortcutEvent.stopInternalCopy()
+    }
+    return GlobalShortcutEvent.isBlankText(selectedText) ? '' : selectedText
   }
 
   /**
