@@ -127,8 +127,8 @@ window.api.winShowEvent(() => {
 </script>
 
 <style lang="scss" scoped>
-@import '../css/global.scss';
-@import '../css/set.scss';
+@use '../css/global.scss' as *;
+@use '../css/set.scss' as *;
 
 .block {
   margin-left: 10px;

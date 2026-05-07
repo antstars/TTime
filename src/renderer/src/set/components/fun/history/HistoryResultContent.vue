@@ -115,7 +115,7 @@ const textWriteShearPlate = (text): void => {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../css/translate.scss';
+@use '../../../../css/translate.scss' as *;
 .translate-service-set-block {
   width: 360px;
   height: 460px;

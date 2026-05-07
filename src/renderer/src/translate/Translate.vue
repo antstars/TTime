@@ -120,8 +120,8 @@ window.api.showMsgEvent((type, msg) => {
 </script>
 
 <style lang='scss' scoped>
-@import '../css/translate.scss';
-@import '../css/translate-input.scss';
+@use '../css/translate.scss' as *;
+@use '../css/translate-input.scss' as *;
 
 .block {
   margin-left: 10px;

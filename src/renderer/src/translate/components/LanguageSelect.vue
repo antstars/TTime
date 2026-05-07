@@ -214,7 +214,7 @@ const languageSearch = (searchLanguageName): any[] => {
 </script>
 
 <style lang="scss" scoped>
-@import '../../css/translate.scss';
+@use '../../css/translate.scss' as *;
 
 .language-select-block {
   //height: 32px;

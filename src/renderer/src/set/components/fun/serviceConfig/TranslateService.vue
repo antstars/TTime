@@ -660,7 +660,7 @@ const serviceNameInput = async (): Promise<void> => {
 </script>
 
 <style lang='scss' scoped>
-@import '../../../../css/set';
+@use '../../../../css/set' as *;
 
 .header {
   display: flex;

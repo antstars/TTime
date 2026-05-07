@@ -1,4 +1,4 @@
-@import 'global';
+@use 'global' as *;
 
 :deep(.el-textarea__inner) {
   background-color: var(--ttime-translate-input-color-background);

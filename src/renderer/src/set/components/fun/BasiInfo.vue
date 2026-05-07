@@ -165,7 +165,7 @@ const hideTranslateLanguageEvent = (value: any): void => {
 </script>
 
 <style lang='scss' scoped>
-@import '../../../css/set.scss';
+@use '../../../css/set.scss' as *;
 
 .form-switch-span {
   margin-left: 5px;

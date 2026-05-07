@@ -239,7 +239,7 @@ init()
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../css/translate.scss';
+@use '../../../../css/translate.scss' as *;
 .content {
   .content-input-block {
     margin: 0 12px 12px 12px;

@@ -43,7 +43,7 @@ const toPage = (url): void => {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../css/set.scss';
+@use '../../../css/set.scss' as *;
 
 .about-layer {
   display: flex;

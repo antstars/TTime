@@ -155,7 +155,8 @@ const deleteTranslateHistory = (): void => {
 </script>
 
 <style lang='scss' scoped>
-@import '../../../../css/set';
+@use '../../../../css/set' as *;
+@use '../../../../css/translate.scss' as *;
 
 .no-init-layer {
   margin-top: 130px;
@@ -245,9 +246,6 @@ const deleteTranslateHistory = (): void => {
 
   }
 }
-
-@import '../../../../css/translate.scss';
-
 
 .translate-service-list-block::-webkit-scrollbar {
   width: 6px;

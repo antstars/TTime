@@ -44,6 +44,13 @@ export default defineConfig({
         BASE_API: BASE_API
       }
     },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          silenceDeprecations: ['legacy-js-api']
+        }
+      }
+    },
     plugins: [
       vue(),
       createSvgIconsPlugin({

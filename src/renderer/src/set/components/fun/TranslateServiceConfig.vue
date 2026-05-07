@@ -22,7 +22,7 @@ const menuIndex = ref(ServiceTypeEnum.TRANSLATE)
 </script>
 
 <style lang="scss" scoped>
-@import '../../../css/set.scss';
+@use '../../../css/set.scss' as *;
 
 .header {
   display: flex;

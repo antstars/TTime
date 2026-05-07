@@ -122,7 +122,7 @@ window.api.openDirectoryDialogCallback((storeConfigFunType, storeType, directory
 </script>
 
 <style lang="scss" scoped>
-@import '../../../css/set.scss';
+@use '../../../css/set.scss' as *;
 
 .path-input {
   width: 90%;

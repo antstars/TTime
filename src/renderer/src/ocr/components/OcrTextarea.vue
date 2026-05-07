@@ -90,8 +90,9 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-@import '../../css/translate.scss';
-@import '../../css/translate-textarea.scss';
+@use '../../css/global.scss' as *;
+@use '../../css/translate.scss' as *;
+@use '../../css/translate-textarea.scss' as *;
 
 .content-textarea-placeholder {
   display: flex;

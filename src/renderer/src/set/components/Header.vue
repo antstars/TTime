@@ -28,7 +28,7 @@ const isMac = (): boolean => {
 </script>
 
 <style lang='scss' scoped>
-@import '../../css/global.scss';
+@use '../../css/global.scss' as *;
 
 .header {
   // 配置窗口可拖拽

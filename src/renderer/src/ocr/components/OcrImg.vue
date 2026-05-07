@@ -44,7 +44,7 @@ window.api.updateImg((img) => {
 </script>
 
 <style lang="scss" scoped>
-@import '../../css/global.scss';
+@use '../../css/global.scss' as *;
 
 .img-block {
   border-radius: 7px;

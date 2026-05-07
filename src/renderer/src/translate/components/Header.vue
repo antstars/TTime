@@ -115,7 +115,7 @@ const toSetTranslateHistoryPage = (): void => {
 </script>
 
 <style lang="scss" scoped>
-@import '../../css/translate.scss';
+@use '../../css/translate.scss' as *;
 
 .header {
   // 配置窗口可拖拽

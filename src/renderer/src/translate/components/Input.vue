@@ -382,8 +382,9 @@ document.documentElement.style.setProperty('--input-text-size', cacheGet('winFon
 </script>
 
 <style lang="scss" scoped>
-@import '../../css/translate.scss';
-@import '../../css/translate-input.scss';
+@use '../../css/global.scss' as *;
+@use '../../css/translate.scss' as *;
+@use '../../css/translate-input.scss' as *;
 
 .content-input-placeholder {
   display: flex;

@@ -55,7 +55,7 @@ window.api.winSizeUpdate((newBounds) => {
 </script>
 
 <style lang="scss" scoped>
-@import '../css/global.scss';
+@use '../css/global.scss' as *;
 .block {
   margin-left: 10px;
   margin-right: 10px;

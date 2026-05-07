@@ -221,7 +221,7 @@ const getShortcutKey = (event): string => {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../css/set.scss';
+@use '../../../css/set.scss' as *;
 
 .input-shortcut-key {
   width: 70%;

@@ -517,7 +517,7 @@ const ocrSpaceModelUpdate = (): void => {
 </script>
 
 <style lang='scss' scoped>
-@import '../../../../css/set';
+@use '../../../../css/set' as *;
 
 .header {
   display: flex;
