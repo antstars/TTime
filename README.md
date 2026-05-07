@@ -80,9 +80,9 @@
 
 开发环境
 ```
-NodeJs Version >= 16
+NodeJs Version >= 22.18
 
-Npm Version >= 8
+Npm Version >= 10
 ```
 
 依赖下载

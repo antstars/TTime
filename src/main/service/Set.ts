@@ -14,14 +14,12 @@ import { StoreConfigFunTypeEnum } from '../../common/enums/StoreConfigFunTypeEnu
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions
 import { ecDictDbClose } from './channel/interfaces/EcDictRequest'
 
-let nullWin: BrowserWindow
-
-let setWin: BrowserWindow
+let setWin: BrowserWindow | null = null
 let isSetWinReady = false
 
 function showSetWindow(): void {
   log.debug('[设置窗口] 尝试显示窗口')
-  if (isNull(setWin) || setWin.isDestroyed()) {
+  if (setWin === null || setWin.isDestroyed()) {
     log.warn('[设置窗口] 窗口为空或已销毁, 无法显示')
     return
   }
@@ -40,7 +38,7 @@ function showSetWindow(): void {
 
 function createSetWindow(): void {
   log.debug('[设置窗口] 开始创建窗口')
-  if (isNotNull(setWin) && !setWin.isDestroyed()) {
+  if (setWin !== null && !setWin.isDestroyed()) {
     log.debug('[设置窗口] 窗口已存在, isSetWinReady: ', isSetWinReady)
     if (isSetWinReady) {
       showSetWindow()
@@ -96,20 +94,21 @@ function createSetWindow(): void {
     }
   }
 
-  setWin = new BrowserWindow(setWinConfig)
-  log.debug('[设置窗口] BrowserWindow 创建完成, ID: ', setWin.id)
+  const win = new BrowserWindow(setWinConfig)
+  setWin = win
+  log.debug('[设置窗口] BrowserWindow 创建完成, ID: ', win.id)
   // 禁用按下F11全屏事件
-  setWin.setFullScreenable(false)
-  GlobalWin.setSetWin(setWin)
+  win.setFullScreenable(false)
+  GlobalWin.setSetWin(win)
 
   /**
    * 窗口显示时触发事件
    */
-  setWin.on('show', () => {
-    setWin.webContents.send('win-show-event')
+  win.on('show', () => {
+    win.webContents.send('win-show-event')
   })
 
-  setWin.webContents.on(
+  win.webContents.on(
     'did-fail-load',
     (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
       log.error(
@@ -125,11 +124,11 @@ function createSetWindow(): void {
     }
   )
 
-  setWin.webContents.on('render-process-gone', (_event, details) => {
+  win.webContents.on('render-process-gone', (_event, details) => {
     log.error('[设置窗口] 渲染进程退出 details=', JSON.stringify(details))
   })
 
-  setWin.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+  win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
     if (level < 2 && !message.includes('[Vue warn]') && !message.includes('[设置窗口异常]')) {
       return
     }
@@ -146,19 +145,19 @@ function createSetWindow(): void {
   })
 
   // 所有平台都在窗口加载完毕后统一显示，避免 Windows 打包版只出任务栏图标不出窗口
-  setWin.on('ready-to-show', () => {
+  win.on('ready-to-show', () => {
     log.debug('[设置窗口] ready-to-show 事件触发 (主监听器)')
     isSetWinReady = true
     showSetWindow()
   })
 
-  setWin.webContents.on('did-finish-load', () => {
+  win.webContents.on('did-finish-load', () => {
     log.debug('[设置窗口] did-finish-load 事件触发')
     setTimeout(() => {
-      if (isNull(setWin) || setWin.isDestroyed()) {
+      if (win.isDestroyed()) {
         return
       }
-      setWin.webContents
+      win.webContents
         .executeJavaScript(`(() => {
           const app = document.getElementById('app')
           return {
@@ -178,7 +177,7 @@ function createSetWindow(): void {
           if (!domInfo.appExists || domInfo.appChildElementCount > 0) {
             return
           }
-          setWin.webContents
+          win.webContents
             .executeJavaScript(`(async () => {
               const moduleScript = document.querySelector('script[type="module"][src]')
               if (!moduleScript || !moduleScript.src) {
@@ -220,25 +219,25 @@ function createSetWindow(): void {
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    setWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/set.html`)
+    win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/set.html`)
   } else {
     const htmlPath = path.join(__dirname, '../renderer/set.html')
     log.debug('[设置窗口] 生产模式, 加载文件: ', htmlPath)
-    setWin.loadFile(htmlPath)
+    win.loadFile(htmlPath)
   }
 
   // 当 window 被关闭，这个事件会被触发。
-  setWin.on('closed', () => {
+  win.on('closed', () => {
     // 取消引用 window 对象，如果你的应用支持    多窗口的话，
     // 通常会把多个 window 对象存放在一个数组里面，
     // 与此同时，你应该删除相应的元素。
     isSetWinReady = false
-    setWin = nullWin
+    setWin = null
     GlobalWin.setSetWin(null)
   })
 
   // 设置窗口获取焦点事件
-  setWin.on('focus', () => {
+  win.on('focus', () => {
     GlobalWin.setWin.webContents.send('set-win-focus-event')
   })
 }
@@ -269,7 +268,7 @@ ipcMain.on('update-translate-shortcutKey-event', (event, type, oldShortcutKey, s
  * 关闭设置窗口事件
  */
 ipcMain.handle('close-set-win-event', (_event, _args) => {
-  if (isNotNull(setWin) && !setWin.isDestroyed()) {
+  if (setWin !== null && !setWin.isDestroyed()) {
     setWin.close()
   }
 })

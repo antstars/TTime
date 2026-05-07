@@ -14,9 +14,7 @@ import { YesNoEnum } from '../../common/enums/YesNoEnum'
 import StoreService from './StoreService'
 import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 
-let nullWin: BrowserWindow
-
-const screenshotWinMap = new Map()
+const screenshotWinMap = new Map<string, BrowserWindow>()
 
 // 窗口加载完毕后执行
 app.whenReady().then(() => {
@@ -28,6 +26,10 @@ app.whenReady().then(() => {
  * 处理图片文字识别
  */
 ipcMain.handle('handle-image-text-recognition-event', async (_event, imgByBase64) => {
+  const textOcrWin = ScreenshotsMain.textOcrWin
+  if (textOcrWin === null) {
+    return
+  }
   const ocrServiceMap = StoreService.configGet('ocrServiceMap') as
     | Array<[string, any]>
     | undefined
@@ -39,7 +41,7 @@ ipcMain.handle('handle-image-text-recognition-event', async (_event, imgByBase64
   const type = ocrService.type
   if (OcrServiceEnum.TTIME === type) {
     // TTime类型则调用本地Ocr
-    ScreenshotsMain.textOcrWin.webContents.send('local-ocr', imgByBase64)
+    textOcrWin.webContents.send('local-ocr', imgByBase64)
   } else {
     const info = {
       appId: ocrService.appId,
@@ -117,7 +119,7 @@ function createTextOcrWin(): void {
   if (ScreenshotsMain.textOcrWin) {
     return console.info('只能有一个createTextOcrWin')
   }
-  ScreenshotsMain.textOcrWin = new BrowserWindow({
+  const textOcrWin = new BrowserWindow({
     // window 使用 fullscreen,  mac 设置为 undefined, 不可为 false
     fullscreen: process.platform !== 'darwin' || undefined, // win
     width: 1000,
@@ -130,22 +132,23 @@ function createTextOcrWin(): void {
       contextIsolation: false
     }
   })
-  ScreenshotsMain.textOcrWin.hide()
+  ScreenshotsMain.textOcrWin = textOcrWin
+  textOcrWin.hide()
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    ScreenshotsMain.textOcrWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/textOcr.html`)
+    textOcrWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/textOcr.html`)
   } else {
-    ScreenshotsMain.textOcrWin.loadFile(path.join(__dirname, '../renderer/textOcr.html'))
+    textOcrWin.loadFile(path.join(__dirname, '../renderer/textOcr.html'))
   }
 
   // 打开开发者工具
   // ScreenshotsMain.textOcrWin.webContents.openDevTools({ mode: 'detach' })
 
   // 当 window 被关闭，这个事件会被触发。
-  ScreenshotsMain.textOcrWin.on('closed', () => {
+  textOcrWin.on('closed', () => {
     // 取消引用 window 对象，如果你的应用支持多窗口的话，
     // 通常会把多个 window 对象存放在一个数组里面，
     // 与此同时，你应该删除相应的元素。
-    ScreenshotsMain.textOcrWin = nullWin
+    ScreenshotsMain.textOcrWin = null
   })
 }
 
@@ -153,7 +156,7 @@ class ScreenshotsSon {
   /**
    * 截图窗口
    */
-  screenshotsWin: BrowserWindow
+  screenshotsWin: BrowserWindow | null
   /**
    * 截图窗口ID
    */
@@ -169,7 +172,7 @@ class ScreenshotsSon {
     const width = screenshots.width
     const height = screenshots.height
     log.debug('[截图窗口] 创建截图窗口, ID: ', this.screenshotsWinId, ', 尺寸: ', width, 'x', height)
-    this.screenshotsWin = new BrowserWindow({
+    const screenshotsWin = new BrowserWindow({
       // window 使用 fullscreen,  mac 设置为 undefined, 不可为 false
       fullscreen: process.platform !== 'darwin' || undefined, // win
       width,
@@ -200,46 +203,47 @@ class ScreenshotsSon {
         sandbox: false
       }
     })
+    this.screenshotsWin = screenshotsWin
     // 禁用按下F11全屏事件
-    this.screenshotsWin.setFullScreenable(false)
-    this.screenshotsWin.setAlwaysOnTop(true, 'screen-saver') // mac
-    // this.screenshotsWin.setVisibleOnAllWorkspaces(true) // mac
+    screenshotsWin.setFullScreenable(false)
+    screenshotsWin.setAlwaysOnTop(true, 'screen-saver') // mac
+    // screenshotsWin.setVisibleOnAllWorkspaces(true) // mac
 
     // HMR for renderer base on electron-vite cli.
     // Load the remote URL for development or the local html file for production.
     if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-      this.screenshotsWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/screenshot.html`)
+      screenshotsWin.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/screenshot.html`)
     } else {
-      this.screenshotsWin.loadFile(path.join(__dirname, '../renderer/screenshot.html'))
+      screenshotsWin.loadFile(path.join(__dirname, '../renderer/screenshot.html'))
     }
 
     // 打开开发者工具
     if (is.dev) {
-      this.screenshotsWin.webContents.openDevTools({ mode: 'detach' })
+      screenshotsWin.webContents.openDevTools({ mode: 'detach' })
     }
 
     // 当 window 被关闭，这个事件会被触发。
-    this.screenshotsWin.on('closed', () => {
+    screenshotsWin.on('closed', () => {
       // 取消引用 window 对象，如果你的应用支持多窗口的话，
       // 通常会把多个 window 对象存放在一个数组里面，
       // 与此同时，你应该删除相应的元素。
-      this.screenshotsWin = nullWin
+      this.screenshotsWin = null
       screenshotWinMap.delete(this.screenshotsWinId)
     })
     // 生成显示器ID
-    screenshotWinMap.set(this.screenshotsWinId, this.screenshotsWin)
-    this.screenshotsWin.webContents
+    screenshotWinMap.set(this.screenshotsWinId, screenshotsWin)
+    screenshotsWin.webContents
       .executeJavaScript('JSON.stringify({width:screen.width,height: screen.height})')
       .then((value) => {
         log.debug('[截图窗口] executeJavaScript 完成, 准备显示窗口')
         if (SystemTypeEnum.isMac()) {
           log.debug('[截图窗口] Mac系统, 使用 show()')
-          this.screenshotsWin.show()
+          screenshotsWin.show()
         } else {
           log.debug('[截图窗口] Windows系统, 使用 setAlwaysOnTop + setVisibleOnAllWorkspaces + showInactive')
-          this.screenshotsWin.setAlwaysOnTop(true, 'pop-up-menu', 1)
-          this.screenshotsWin.setVisibleOnAllWorkspaces(true)
-          this.screenshotsWin.showInactive()
+          screenshotsWin.setAlwaysOnTop(true, 'pop-up-menu', 1)
+          screenshotsWin.setVisibleOnAllWorkspaces(true)
+          screenshotsWin.showInactive()
         }
         log.debug('[截图窗口] 窗口显示方法已调用')
         const res = JSON.parse(value)
@@ -248,7 +252,7 @@ class ScreenshotsSon {
         screenshots.capture().then((imgBuffer) => {
           const image = 'data:image/png;base64,' + imgBuffer.toString('base64')
           // 窗口绘制截图样式
-          this.screenshotsWin.webContents.send('win-draw-screenshot-style', {
+          screenshotsWin.webContents.send('win-draw-screenshot-style', {
             screenId: this.screenshotsWinId,
             screenImgUrl: image,
             width: screenWidth,
@@ -263,7 +267,7 @@ class ScreenshotsMain {
   /**
    * 文字识别窗口
    */
-  static textOcrWin: BrowserWindow
+  static textOcrWin: BrowserWindow | null = null
 
   /**
    * ocr类型
@@ -327,7 +331,7 @@ class ScreenshotsMain {
       return
     }
     ScreenshotsMain.screenshotsWinList.forEach((screenshotsSon) => {
-      screenshotsSon.screenshotsWin.close()
+      screenshotsSon.screenshotsWin?.close()
     })
     ScreenshotsMain.screenshotsWinList = []
     ScreenshotsMain.isCreate = false
