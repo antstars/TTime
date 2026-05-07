@@ -5,14 +5,6 @@
         <el-radio-button :label="0">文本翻译</el-radio-button>
         <el-radio-button :label="1">文字识别</el-radio-button>
       </el-radio-group>
-
-      <el-tooltip
-        effect="dark"
-        content="点击查看 翻译源/文本识别 申请教程"
-        placement="bottom-start"
-      >
-        <el-button size="small" @click="toPageTranslateServiceApply">使用教程</el-button>
-      </el-tooltip>
     </div>
 
     <translate-service v-if="menuIndex === ServiceTypeEnum.TRANSLATE" />
@@ -27,10 +19,6 @@ import OcrService from './serviceConfig/OcrService.vue'
 import { ServiceTypeEnum } from '../../../../../common/enums/ServiceTypeEnum'
 
 const menuIndex = ref(ServiceTypeEnum.TRANSLATE)
-
-const toPageTranslateServiceApply = (): void => {
-  window.api.jumpToPage('https://github.com/antstars/TTime/pages/482152/')
-}
 </script>
 
 <style lang="scss" scoped>

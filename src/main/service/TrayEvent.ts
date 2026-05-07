@@ -50,12 +50,6 @@ class TrayEvent {
       },
       { type: 'separator' },
       {
-        label: '使用教程',
-        click: (): void => {
-          shell.openExternal('https://github.com/antstars/TTime')
-        }
-      },
-      {
         label: '查看日志',
         click: (): void => {
           const systemType = SystemTypeEnum.getSystemType()
