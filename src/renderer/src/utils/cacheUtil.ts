@@ -17,8 +17,8 @@ export const cacheGet = (key): any => {
  * @param key key
  * @param val val
  */
-export const cacheSet = (key, val): void => {
-  cacheSetByType(StoreTypeEnum.CONFIG, key, val)
+export const cacheSet = (key, val): Promise<void> => {
+  return cacheSetByType(StoreTypeEnum.CONFIG, key, val)
 }
 
 /**
@@ -26,8 +26,8 @@ export const cacheSet = (key, val): void => {
  *
  * @param key key
  */
-export const cacheDelete = (key): void => {
-  cacheDeleteByType(StoreTypeEnum.CONFIG, key)
+export const cacheDelete = (key): Promise<void> => {
+  return cacheDeleteByType(StoreTypeEnum.CONFIG, key)
 }
 
 /**
@@ -48,12 +48,12 @@ export const cacheGetByType = (storeType, key): any => {
  * @param key key
  * @param val val
  */
-export const cacheSetByType = (storeType, key, val): void => {
+export const cacheSetByType = (storeType, key, val): Promise<void> => {
   const type = Object.prototype.toString.call(val)
   if (type === '[object Object]' || type === '[object Array]') {
     val = JSON.parse(JSON.stringify(val))
   }
-  window.api['cacheSet'](storeType, key, val)
+  return window.api['cacheSet'](storeType, key, val)
 }
 
 /**
@@ -62,8 +62,8 @@ export const cacheSetByType = (storeType, key, val): void => {
  * @param storeType 存储类型
  * @param key key
  */
-export const cacheDeleteByType = (storeType, key): void => {
-  window.api['cacheDelete'](storeType, key)
+export const cacheDeleteByType = (storeType, key): Promise<void> => {
+  return window.api['cacheDelete'](storeType, key)
 }
 
 /**

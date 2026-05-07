@@ -126,12 +126,16 @@ class BingDictChannel extends TranslateAgent implements ITranslateAgentInterface
    */
   static async handleDictField(val): Promise<string> {
     val = val?.replace(/<\/?[^>]+(>|$)/g, '')
+    const safeVal = JSON.stringify(val ?? '')
     await GlobalWin.mainWin.webContents
       .executeJavaScript(
-        `var txt = document.createElement("textarea"); txt.innerHTML = "${val}";txt.value`
+        `(() => { const txt = document.createElement("textarea"); txt.innerHTML = ${safeVal}; return txt.value })()`
       )
       .then((valExtend) => {
         val = valExtend
+      })
+      .catch((error) => {
+        log.error('[BingDict翻译事件] - 字典字段解码异常 : ', error)
       })
     return val
   }

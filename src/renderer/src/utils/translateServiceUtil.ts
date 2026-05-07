@@ -67,17 +67,8 @@ const normalizeTranslateServiceMap = (translateServiceMap?: Map<string, any>): M
   return normalizedMap
 }
 
-/**
- * 保存翻译服务Map
- *
- * @param translateServiceMap 翻译服务Map
- */
-export const setTranslateServiceMap = (translateServiceMap: Map<string, any>): void => {
-  const normalizedMap = normalizeTranslateServiceMap(translateServiceMap)
-  const translateServiceMapFormat = Array.from(normalizedMap.entries())
-  cacheSet('translateServiceMap', translateServiceMapFormat)
-  // 上面移除完毕保存后重新设置渠道信息
-  normalizedMap.forEach((translateService) => {
+const hydrateTranslateServiceMap = (translateServiceMap: Map<string, any>): void => {
+  translateServiceMap.forEach((translateService) => {
     translateService['serviceInfo'] = TranslateServiceBuilder.getInfoByService(
       translateService['type']
     )
@@ -85,6 +76,22 @@ export const setTranslateServiceMap = (translateServiceMap: Map<string, any>): v
       ? translateService['serviceInfo']?.name
       : translateService['serviceName']
   })
+}
+
+/**
+ * 保存翻译服务Map
+ *
+ * @param translateServiceMap 翻译服务Map
+ */
+export const setTranslateServiceMap = async (
+  translateServiceMap: Map<string, any>
+): Promise<Map<string, any>> => {
+  const normalizedMap = normalizeTranslateServiceMap(translateServiceMap)
+  const translateServiceMapFormat = Array.from(normalizedMap.entries())
+  await cacheSet('translateServiceMap', translateServiceMapFormat)
+  // 上面移除完毕保存后重新设置渠道信息
+  hydrateTranslateServiceMap(normalizedMap)
+  return normalizedMap
 }
 
 /**
@@ -97,11 +104,11 @@ export const getTranslateServiceMap = (): Map<any, any> => {
     map.size !== normalizedMap.size ||
     JSON.stringify(Array.from(map.entries())) !== JSON.stringify(Array.from(normalizedMap.entries()))
   ) {
-    setTranslateServiceMap(normalizedMap)
-    map = new Map(cacheGet('translateServiceMap'))
+    setTranslateServiceMap(normalizedMap).then()
+    map = normalizedMap
   } else if (map.size === 0) {
-    setTranslateServiceMap(normalizedMap)
-    map = new Map(cacheGet('translateServiceMap'))
+    setTranslateServiceMap(normalizedMap).then()
+    map = normalizedMap
   }
   // 将 Map 转换为包含键值对数组的二维数组
   const entries = Array.from(map.entries())
@@ -110,14 +117,7 @@ export const getTranslateServiceMap = (): Map<any, any> => {
   // 创建一个新的有序 Map
   map = new Map(entries)
   // 此处设置渠道信息
-  map.forEach((translateService) => {
-    translateService['serviceInfo'] = TranslateServiceBuilder.getInfoByService(
-      translateService['type']
-    )
-    translateService['serviceName'] = isNull(translateService['serviceName'])
-      ? translateService['serviceInfo']?.name
-      : translateService['serviceName']
-  })
+  hydrateTranslateServiceMap(map)
   return map
 }
 

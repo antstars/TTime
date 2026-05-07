@@ -10,8 +10,8 @@ declare global {
     showMsgEvent
     cacheHas
     cacheGet
-    cacheSet
-    cacheDelete
+    cacheSet: (storeTypeEnum: string, key: string, obj: unknown) => Promise<void>
+    cacheDelete: (storeTypeEnum: string, key: string) => Promise<void>
     textWriteShearPlateEvent
   }
 }

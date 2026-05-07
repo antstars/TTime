@@ -406,11 +406,11 @@ const selectTranslateService = (translateService: any): void => {
  *
  * @param type 翻译类型
  */
-const addTranslateService = (type: string): void => {
+const addTranslateService = async (type: string): Promise<void> => {
   resetTranslateServiceCheck()
   const service: any = buildTranslateService(type)
   if (null !== service) {
-    saveService(service)
+    await saveService(service)
     translateServiceThis.value = service
   }
   // 更新翻译源通知
@@ -420,11 +420,11 @@ const addTranslateService = (type: string): void => {
 /**
  * 删除翻译服务
  */
-const deleteTranslateService = (): void => {
+const deleteTranslateService = async (): Promise<void> => {
   resetTranslateServiceCheck()
   const insideTranslateServiceMap = getTranslateServiceMap()
   insideTranslateServiceMap.delete(translateServiceThis.value.id)
-  setTranslateServiceMap(insideTranslateServiceMap)
+  await setTranslateServiceMap(insideTranslateServiceMap)
   updateTranslateServiceBinding()
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
@@ -473,7 +473,7 @@ const translateServiceCheckAndSave = (): void => {
   }
   // 开启翻译服务验证加载状态
   checkIngStatus.value = true
-  translateServiceCheckTimer = setTimeout(() => {
+  translateServiceCheckTimer = setTimeout(async () => {
     const activeCheck = activeTranslateServiceCheck.value
     if (
       activeCheck?.id !== value.id ||
@@ -486,7 +486,7 @@ const translateServiceCheckAndSave = (): void => {
     if (!isNull(insideTranslateService)) {
       insideTranslateService.useStatus = false
       insideTranslateService.checkStatus = false
-      saveService(insideTranslateService)
+      await saveService(insideTranslateService)
     }
     resetTranslateServiceCheck()
     ElMessageExtend.warning('验证超时，请检查网络或密钥是否可用')
@@ -497,7 +497,7 @@ const translateServiceCheckAndSave = (): void => {
 /**
  * 翻译服务验证回调 - translateServiceCheckAndSave 触发后结果回调到这里
  */
-window.api.apiCheckTranslateCallbackEvent((type, res) => {
+window.api.apiCheckTranslateCallbackEvent(async (type, res) => {
   if (!checkIngStatus.value || isNull(activeTranslateServiceCheck.value)) {
     return
   }
@@ -552,9 +552,9 @@ window.api.apiCheckTranslateCallbackEvent((type, res) => {
   // 验证成功后处理
   if (useStatus && checkStatus) {
     // 关闭其他已开启的相同类型翻译服务
-    serviceCloseOtherSameTypesInUse(insideTranslateService)
+    await serviceCloseOtherSameTypesInUse(insideTranslateService)
   }
-  saveService(insideTranslateService)
+  await saveService(insideTranslateService)
   if (translateServiceThis.value?.id === insideTranslateService.id) {
     translateServiceThis.value = insideTranslateService
   }
@@ -571,15 +571,15 @@ onUnmounted(() => {
  *
  * @param translateService 更改的翻译源信息
  */
-const serviceUseStatusChange = (translateService): void => {
+const serviceUseStatusChange = async (translateService): Promise<void> => {
   if (translateService.useStatus && !translateService.checkStatus) {
     translateService.useStatus = false
     return ElMessageExtend.warning('未验证的服务无法使用')
   }
   // 关闭其他已开启的相同类型翻译服务
-  serviceCloseOtherSameTypesInUse(translateService)
+  await serviceCloseOtherSameTypesInUse(translateService)
   // 保存翻译源更新的信息
-  saveService(translateService)
+  await saveService(translateService)
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
 }
@@ -589,7 +589,7 @@ const serviceUseStatusChange = (translateService): void => {
  *
  * @param translateService 当前开启的服务
  */
-const serviceCloseOtherSameTypesInUse = (translateService): void => {
+const serviceCloseOtherSameTypesInUse = async (translateService): Promise<void> => {
   for (const insideTranslateService of getTranslateServiceMap().values()) {
     if (
       insideTranslateService.type === translateService.type &&
@@ -598,7 +598,7 @@ const serviceCloseOtherSameTypesInUse = (translateService): void => {
       translateService.useStatus
     ) {
       insideTranslateService.useStatus = false
-      saveService(insideTranslateService)
+      await saveService(insideTranslateService)
       break
     }
   }
@@ -609,17 +609,17 @@ const serviceCloseOtherSameTypesInUse = (translateService): void => {
  *
  * @param translateService 翻译源
  */
-const saveService = (translateService): void => {
+const saveService = async (translateService): Promise<void> => {
   const insideTranslateServiceMap = getTranslateServiceMap()
   insideTranslateServiceMap.set(translateService.id, translateService)
-  setTranslateServiceMap(insideTranslateServiceMap)
+  await setTranslateServiceMap(insideTranslateServiceMap)
   updateTranslateServiceBinding()
 }
 
 /**
  * 服务排序拖动更改
  */
-const serviceSortDragChange = (event): void => {
+const serviceSortDragChange = async (event): Promise<void> => {
   const moved = event.moved
   // 将 Map 转换为数组
   const entries = Array.from(getTranslateServiceMap().entries())
@@ -630,7 +630,7 @@ const serviceSortDragChange = (event): void => {
   ]
   // 创建一个新的有序 Map
   const swappedMap = new Map(entries)
-  setTranslateServiceMap(swappedMap)
+  await setTranslateServiceMap(swappedMap)
   // 更新页面绑定翻译服务数据
   updateThisServiceMap(swappedMap)
   // 更新翻译源通知
@@ -650,9 +650,9 @@ const updateThisServiceMap = (newTranslateServiceMap): void => {
 /**
  * 服务名称输入监听
  */
-const serviceNameInput = (): void => {
+const serviceNameInput = async (): Promise<void> => {
   // 保存翻译源更新的信息
-  saveService(translateServiceThis.value)
+  await saveService(translateServiceThis.value)
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
 }

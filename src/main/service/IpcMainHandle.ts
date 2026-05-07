@@ -31,7 +31,16 @@ ipcMain.on('jump-to-page-event', (_event, url) => {
   if (isNull(url)) {
     return
   }
-  shell.openExternal(url)
+  try {
+    const targetUrl = new URL(url)
+    if (!['http:', 'https:'].includes(targetUrl.protocol)) {
+      log.warn('[跳转页面事件] - 不支持的URL协议 : ', targetUrl.protocol)
+      return
+    }
+    shell.openExternal(targetUrl.toString())
+  } catch (error) {
+    log.warn('[跳转页面事件] - URL格式错误 : ', url, error)
+  }
 })
 
 /**

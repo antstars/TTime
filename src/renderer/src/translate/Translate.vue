@@ -74,15 +74,19 @@ window.api.winShowByInputEvent(() => {
  * 翻译服务list 如果不存在则说明第一次打开
  * 初始化默认翻译服务
  */
-if (isNull(cacheGet('translateServiceMap')) || getTranslateServiceMap().size === 0) {
-  const translateServiceMap = oldCacheGet('translateServiceMap')
-  if (undefined !== translateServiceMap) {
-    // 兼容浏览器存储方式的数据 导入到文件存储里去
-    setTranslateServiceMap(new Map(translateServiceMap))
-  } else {
-    setTranslateServiceMap(new Map())
+const initTranslateServiceMap = async (): Promise<void> => {
+  if (isNull(cacheGet('translateServiceMap')) || getTranslateServiceMap().size === 0) {
+    const translateServiceMap = oldCacheGet('translateServiceMap')
+    if (undefined !== translateServiceMap) {
+      // 兼容浏览器存储方式的数据 导入到文件存储里去
+      await setTranslateServiceMap(new Map(translateServiceMap))
+    } else {
+      await setTranslateServiceMap(new Map())
+    }
   }
 }
+
+initTranslateServiceMap().then()
 
 /**
  * Ocr服务list 如果不存在则说明第一次打开

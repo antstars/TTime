@@ -66,8 +66,8 @@ const cacheGet = (storeTypeEnum, key): object => {
  * @param key key
  * @param obj 数据
  */
-const cacheSet = (storeTypeEnum, key, obj): void => {
-  ipcRenderer.invoke('cache-set', storeTypeEnum, key, obj)
+const cacheSet = (storeTypeEnum, key, obj): Promise<void> => {
+  return ipcRenderer.invoke('cache-set', storeTypeEnum, key, obj)
 }
 
 /**
@@ -76,8 +76,8 @@ const cacheSet = (storeTypeEnum, key, obj): void => {
  * @param storeTypeEnum 存储类型
  * @param key key
  */
-const cacheDelete = (storeTypeEnum, key): void => {
-  ipcRenderer.invoke('cache-delete', storeTypeEnum, key)
+const cacheDelete = (storeTypeEnum, key): Promise<void> => {
+  return ipcRenderer.invoke('cache-delete', storeTypeEnum, key)
 }
 
 /**

@@ -214,7 +214,9 @@ class ScreenshotsSon {
     }
 
     // 打开开发者工具
-    this.screenshotsWin.webContents.openDevTools({ mode: 'detach' })
+    if (is.dev) {
+      this.screenshotsWin.webContents.openDevTools({ mode: 'detach' })
+    }
 
     // 当 window 被关闭，这个事件会被触发。
     this.screenshotsWin.on('closed', () => {
