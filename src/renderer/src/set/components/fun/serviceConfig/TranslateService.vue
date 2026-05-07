@@ -482,6 +482,12 @@ const translateServiceCheckAndSave = (): void => {
     ) {
       return
     }
+    const insideTranslateService = getTranslateServiceMap().get(value.id)
+    if (!isNull(insideTranslateService)) {
+      insideTranslateService.useStatus = false
+      insideTranslateService.checkStatus = false
+      saveService(insideTranslateService)
+    }
     resetTranslateServiceCheck()
     ElMessageExtend.warning('验证超时，请检查网络或密钥是否可用')
   }, TRANSLATE_SERVICE_CHECK_TIMEOUT)
