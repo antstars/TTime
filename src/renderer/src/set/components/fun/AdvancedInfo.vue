@@ -67,7 +67,7 @@
 
     <span class="group-title-span none-select"> 功能设置 </span>
     <el-divider />
-    <el-form-item class="form-item-group none-select" label="鼠标悬浮球(Beta)">
+    <el-form-item class="form-item-group none-select" label="鼠标悬浮球">
       <el-checkbox
         v-model="advancedSettingInfo.hoverBallStatus"
         label="悬浮球取词"
@@ -260,7 +260,8 @@ const ocrWriteClipboardStatusEvent = (val): void => {
 const hoverBallStatusEvent = (val): void => {
   if (val) {
     ElMessageBox({
-      title: '鼠标悬浮球取词(Beta)',
+      title: '鼠标悬浮球取词',
+      modal: false,
       message: h('p', null, [
         h('span', null, '开启后，操作流程：'),
         h('br', null, []),
@@ -271,15 +272,10 @@ const hoverBallStatusEvent = (val): void => {
         h(
           'span',
           null,
-          '注意：此功能正在测试试行阶段，目前仅支持Windows，如果使用过程中出现问题欢迎联系我们进行反馈修复'
+          '注意：此功能目前仅支持Windows，如果使用过程中出现问题欢迎联系我们进行反馈修复'
         )
       ])
     })
-    const el = document.querySelector('.el-overlay')
-    if (el) {
-      // 此处动态调整下遮罩 否则大小会超过窗口
-      el['style'].cssText = 'width: 97.7%;margin-left: 10px;border-radius: 8px;'
-    }
   }
   hoverBallEnhanceStatusEvent(val)
   cacheSet('hoverBallStatus', val ? YesNoEnum.Y : YesNoEnum.N)

@@ -243,7 +243,7 @@ if (!SystemTypeEnum.isMac()) {
       // 如果不为Win环境下这块默认不进行获取状态 直接返回取词
       return true
     }
-    const promise = new Promise((resolve, reject) => {
+    const promise = new Promise<string>((resolve, reject) => {
       let mouseSelectTextStatusPath
       if (app.isPackaged) {
         mouseSelectTextStatusPath = path.join(
@@ -254,19 +254,31 @@ if (!SystemTypeEnum.isMac()) {
         mouseSelectTextStatusPath = path.join(__dirname, '../../plugins/mouse-select-text-status.exe')
       }
       const selectStatusSpawn = spawn(mouseSelectTextStatusPath)
+      let output = ''
+      let errorOutput = ''
       // 执行成功回调
       selectStatusSpawn.stdout.on('data', (data) => {
-        resolve(data.toString())
+        output += data.toString()
       })
       // 执行失败回调
       selectStatusSpawn.stderr.on('data', (data) => {
-        reject(data)
+        errorOutput += data.toString()
+      })
+      selectStatusSpawn.on('error', (error) => {
+        reject(error)
+      })
+      selectStatusSpawn.on('close', (code) => {
+        if (code === 0 && output !== '') {
+          resolve(output)
+        } else {
+          reject(errorOutput || `mouse-select-text-status.exe exited with code ${code}`)
+        }
       })
     })
     //
     await promise
       .then((status) => {
-        response = status === '1'
+        response = status.trim() === '1'
       })
       .catch((error) => {
         log.error('获取鼠标指针是否选中文本状态异常 = ', error)
