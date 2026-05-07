@@ -25,7 +25,7 @@
     "build:linux": "npm run modules-update && npm run build && electron-builder --linux --config",
     "build:linux:ci": "npm run modules-update && npm run build && electron-builder --linux AppImage deb --config",
     "npm-i-extend-modules-update": "npm i && npm run modules-update",
-    "modules-update": "node modules-update.ts"
+    "modules-update": "node modules-update.cjs"
   },
   "dependencies": {
     "@alicloud/alimt20181012": "^1.0.4",

@@ -12,13 +12,9 @@ copy(UPDATE_NODE_MODULES, NODE_MODULES)
 /**
  * @param {string} origin 需要复制的目录、文件
  * @param {string} target 复制到指定的目录、文件
- * @param {string} filterFn 每次复制前，都会经过一次filterFn，若返回true，则复制。
+ * @param {(origin: string, target: string) => boolean} filterFn 每次复制前，都会经过一次filterFn，若返回true，则复制。
  */
-function copy(
-  origin: string,
-  target: string,
-  filterFn = (_origin: string, _target: string): boolean => true
-): void {
+function copy(origin, target, filterFn = (_origin, _target) => true) {
   if (fs.statSync(origin).isDirectory()) {
     if (!fs.existsSync(target)) {
       fs.mkdirSync(target)
