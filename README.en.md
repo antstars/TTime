@@ -1,6 +1,5 @@
 <div align='center'>
 
-  <img width="150px" src="https://ttime.timerecord.cn/img/logo.png"/>
 
   # TTime
 

@@ -1,7 +1,5 @@
 <div align='center'>
 
-  <img width="150px" src="https://ttime.timerecord.cn/img/logo.png"/>
-
   # TTime
 
   🚀 一款简洁高效的输入、截图、划词翻译软件
