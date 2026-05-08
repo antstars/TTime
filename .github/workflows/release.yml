@@ -34,14 +34,14 @@ jobs:
             artifact-name: TTime-windows-portable
             artifact-path: |
               dist/*-portable.zip
-          - name: macOS
-            os: macos-13
-            command: npm run build:mac
-            artifact-name: TTime-macos
-            artifact-path: |
-              dist/*.dmg
-              dist/*.zip
-              dist/*.blockmap
+          # - name: macOS
+          #   os: macos-13
+          #   command: npm run build:mac
+          #   artifact-name: TTime-macos
+          #   artifact-path: |
+          #     dist/*.dmg
+          #     dist/*.zip
+          #     dist/*.blockmap
           - name: Linux
             os: ubuntu-22.04
             command: npm run build:linux:ci
