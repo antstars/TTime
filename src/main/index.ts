@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron'
+import type { Rectangle } from 'electron'
 import * as path from 'path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { GlobalShortcutEvent } from './service/GlobalShortcutEvent'
@@ -35,6 +36,28 @@ const mainWinInfo = {
 }
 // 主窗口
 let mainWin: BrowserWindow
+const mainWinPositionConfigKey = 'mainWinPosition'
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function saveMainWinPosition(bounds: Rectangle): void {
+  if (!isFiniteNumber(bounds.x) || !isFiniteNumber(bounds.y)) {
+    return
+  }
+  StoreService.configSet(mainWinPositionConfigKey, {
+    x: Math.floor(bounds.x),
+    y: Math.floor(bounds.y)
+  })
+}
+
+function saveCurrentMainWinPosition(): void {
+  if (!mainWin || mainWin.isDestroyed()) {
+    return
+  }
+  saveMainWinPosition(mainWin.getBounds())
+}
 
 // 获取单例锁
 const gotTheLock = app.requestSingleInstanceLock()
@@ -121,6 +144,7 @@ async function createWindow(): Promise<void> {
    * 主窗口关闭事件
    */
   mainWin.on('close', (event) => {
+    saveCurrentMainWinPosition()
     if (!GlobalWin.isMainWinClose && !is.dev) {
       // 阻止窗口关闭
       event.preventDefault()
@@ -145,12 +169,20 @@ async function createWindow(): Promise<void> {
   })
 
   /**
+   * 窗口移动完成事件
+   */
+  mainWin.on('moved', () => {
+    saveCurrentMainWinPosition()
+  })
+
+  /**
    * 窗口失去焦点事件
    */
   mainWin.on('blur', () => {
     if (GlobalWin.isMainAlwaysOnTop) {
       return
     }
+    saveCurrentMainWinPosition()
     // 隐藏窗口
     GlobalWin.mainWinHide()
     if (StoreService.configGet('showTranslateNotEmptyStatus') === YesNoEnum.N) {

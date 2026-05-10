@@ -129,6 +129,7 @@ class GlobalWin {
     const translateShowPositionType = StoreService.configGet('translateShowPositionType')
     log.debug('[GlobalWin] mainWinShow: 显示位置类型 = ', translateShowPositionType)
     if (TranslateShowPositionEnum.LAST_TIME === translateShowPositionType) {
+      GlobalWin.restoreMainWinPosition()
       GlobalWin.winShow(GlobalWin.mainWin)
       this.mainOrOcrWinShowCallback()
     } else if (TranslateShowPositionEnum.FOLLOW_MOUSE === translateShowPositionType) {
@@ -163,6 +164,46 @@ class GlobalWin {
       }
       GlobalWin.winShow(GlobalWin.mainWin)
       this.mainOrOcrWinShowCallback()
+    }
+  }
+
+  static isValidMainWinPosition(mainWinPosition: any): boolean {
+    return (
+      !isNull(mainWinPosition) &&
+      typeof mainWinPosition === 'object' &&
+      Number.isFinite(mainWinPosition.x) &&
+      Number.isFinite(mainWinPosition.y)
+    )
+  }
+
+  static restoreMainWinPosition(): void {
+    const mainWinPosition = StoreService.configGet('mainWinPosition')
+    if (!GlobalWin.isValidMainWinPosition(mainWinPosition)) {
+      return
+    }
+    const [width, height] = GlobalWin.mainWin.getSize()
+    const x = Math.floor(mainWinPosition.x)
+    const y = Math.floor(mainWinPosition.y)
+    const isVisibleInDisplay = screen.getAllDisplays().some((display) => {
+      const bounds = display.bounds
+      return (
+        x < bounds.x + bounds.width &&
+        x + width > bounds.x &&
+        y < bounds.y + bounds.height &&
+        y + height > bounds.y
+      )
+    })
+    if (!isVisibleInDisplay) {
+      return
+    }
+    try {
+      GlobalWin.mainWin.setPosition(x, y)
+    } catch (e) {
+      log.error('[GlobalWin] restoreMainWinPosition: 设置上次窗口位置异常', {
+        x,
+        y,
+        e
+      })
     }
   }
 
