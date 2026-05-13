@@ -55,15 +55,9 @@ Highlights:
 ## Integrated Translation/OCR Services
 [Translation source/text recognition application reference](https://github.com/antstars/TTime/pages/93e0f8/#%E7%BF%BB%E8%AF%91%E6%BA%90%E4%BB%8B%E7%BB%8D)
 
+The translation service list is based on services that can be added and configured in Settings.
+
 - [x] Translation Services
-  - [x] TTime (built-in)
-  - [x] Google Translation (built-in)
-  - [x] DeepL Translation (built-in) = DeepLX Translation
-  - [x] Bing Translation (built-in)
-  - [x] Bing dict Translation (built-in)
-  - [x] Tencent TranSmart Translation (built-in)
-  - [x] NiuTrans (built-in)
-  - [x] ECDICT Translation-Offline (built-in)
   - [x] Tencent Translator
   - [x] Baidu Translation
   - [x] Alibaba Translation
