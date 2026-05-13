@@ -2,7 +2,7 @@
 
   # TTime
 
-  🚀 一款简洁高效的输入、截图、划词翻译软件
+  🚀 一款简洁高效的输入、截图、划词翻译与 OCR 工具
 
   <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-Windows-blue?logo=windows&logoColor=white" /></a>
   <a href="https://github.com/antstars/TTime"><img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white" /></a>
@@ -14,6 +14,17 @@
 ## 简介
 
 主要功能：`输入翻译`、`截图翻译`、`划词翻译`、`悬浮球翻译`、`截图OCR`、`静默截图OCR`、`剪贴板监听翻译`
+
+功能亮点：
+
+- 翻译窗口：支持上一次位置、跟随鼠标、距顶部百分比显示，可调整字体大小，可隐藏输入框和语言选择栏
+- 主题外观：支持跟随系统、明亮模式、暗黑模式
+- 翻译体验：支持输入自动翻译、翻译记录、语音播放、翻译结果换行处理、显示翻译窗口时保留上一次内容
+- OCR 处理：支持 OCR 结果写入剪贴板，支持 OCR 结果换行替换为空格或空白
+- 剪贴板监听：可在翻译窗口显示监听开关，监听复制文本后自动翻译
+- 结果工具：英文翻译结果可一键复制为驼峰格式或蛇形格式
+- 网络代理：支持不使用代理、HTTP 代理、SOCKS5 代理
+- 配置管理：支持移动或切换配置文件、翻译记录和插件目录
 
 ## 界面
 <div align='center'>
@@ -80,7 +91,7 @@
 
 开发环境
 ```
-NodeJs Version >= 22.18
+Node.js Version >= 22.18.0
 
 Npm Version >= 10
 ```
@@ -100,21 +111,22 @@ npm run dev
 npm run build:win
 npm run build:win:portable
 npm run build:mac
+npm run build:linux
 ```
 
 ## 简单快速新增翻译/OCR源
 
-新增翻译/OCR源新增很简单，你只需要有一些JS/TS基础和接口联调能力就可以集成 ，以下以小牛翻译为例
+新增翻译/OCR源很简单，你只需要具备一些 JS/TS 基础和接口联调能力即可集成，以下以小牛翻译为例。
 
 ### 1.新增类型
 
-编辑文件添加一个翻译源枚举
+编辑文件，添加一个翻译源枚举。
 
 ```
 src/common/enums/TranslateServiceEnum.ts
 ```
 
-`此处需要注意：当翻译源枚举定义后，后续的文件名称都需要按照枚举名称方式命名，具体参照如下步骤的命名规则`
+`注意：翻译源枚举定义后，后续文件名称需要按照枚举名称命名，具体参照如下步骤的命名规则。`
 
 ```
 static NIU_TRANS = 'NiuTrans'
@@ -122,7 +134,7 @@ static NIU_TRANS = 'NiuTrans'
 
 ### 2.新增Logo
 
-把Logo文件复制到此文件路径下
+把 Logo 文件复制到此文件路径下。
 
 ```
 src/renderer/src/assets/translate/NiuTransLogo.png
@@ -130,7 +142,7 @@ src/renderer/src/assets/translate/NiuTransLogo.png
 
 ### 3.新增翻译/OCR源信息
 
-新增翻译/OCR源信息文件
+新增翻译/OCR 源信息文件。
 
 ```
 src/common/channel/translate/info/NiuTransInfo.ts
@@ -138,13 +150,13 @@ src/common/channel/translate/info/NiuTransInfo.ts
 
 ### 4.新增翻译/OCR源实现
 
-新增翻译/OCR源接口实现
+新增翻译/OCR 源接口实现。
 
 ```
 src/main/service/channel/interfaces/NiuTransRequest.ts
 ```
 
-新增翻译/OCR源接口调用回调页面结果
+新增翻译/OCR 源接口调用回调页面结果。
 
 ```
 src/main/service/channel/product/translate/NiuTransChannel.ts
