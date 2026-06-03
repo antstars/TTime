@@ -49,7 +49,7 @@ class TranslateChannelFactory {
    * @param info 翻译信息
    */
   static translate(type, info): void {
-    log.info(
+    log.debug(
       `[${TranslateChannelFactory.channelConfigs[type].name}事件] - 请求报文 : `,
       paramsFilter(info)
     )
@@ -64,7 +64,7 @@ class TranslateChannelFactory {
    * @param info 翻译信息
    */
   static translateCheck(type, info): void {
-    log.info(
+    log.debug(
       `[${TranslateChannelFactory.channelConfigs[type].name}校验密钥事件] - 请求报文 : `,
       paramsFilter(info)
     )

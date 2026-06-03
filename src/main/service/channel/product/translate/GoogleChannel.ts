@@ -23,7 +23,7 @@ class GoogleChannel extends TranslateAgent implements ITranslateAgentInterface {
       )
       return
     }
-    log.info('[Google翻译事件] - 响应报文 : ', JSON.stringify(data))
+    log.debug('[Google翻译事件] - 响应报文 : ', JSON.stringify(data))
     GlobalWin.mainWinSend(
       TranslateChannelFactory.callbackName(info.type),
       R.okIT(
@@ -52,7 +52,7 @@ class GoogleChannel extends TranslateAgent implements ITranslateAgentInterface {
       )
       return
     }
-    log.info('[Google翻译校验密钥事件] - 响应报文 : ', JSON.stringify(data))
+    log.debug('[Google翻译校验密钥事件] - 响应报文 : ', JSON.stringify(data))
     GlobalWin.setWin.webContents.send(
       'api-check-translate-callback-event',
       TranslateServiceEnum.GOOGLE,

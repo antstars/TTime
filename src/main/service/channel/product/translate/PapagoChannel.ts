@@ -17,7 +17,7 @@ class PapagoChannel implements ITranslateInterface {
   apiTranslate(info): void {
     PapagoRequest.apiTranslate(info)
       .then((res) => {
-        log.info('[Papago翻译事件] - 响应报文 : ', res)
+        log.debug('[Papago翻译事件] - 响应报文 : ', res)
         const data = res['message']['result']['translatedText']
         GlobalWin.mainWinSend(
           TranslateChannelFactory.callbackName(info.type),
@@ -42,7 +42,7 @@ class PapagoChannel implements ITranslateInterface {
     info.languageType = 'zh-CN'
     PapagoRequest.apiTranslate(info).then(
       (res) => {
-        log.info('[Papago翻译校验密钥事件] - 响应报文 : ', res)
+        log.debug('[Papago翻译校验密钥事件] - 响应报文 : ', res)
         GlobalWin.setWin.webContents.send(
           'api-check-translate-callback-event',
           TranslateServiceEnum.PAPAGO,

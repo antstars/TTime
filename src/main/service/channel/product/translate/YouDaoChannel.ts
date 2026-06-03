@@ -16,8 +16,8 @@ class YouDaoChannel implements ITranslateInterface {
   apiTranslate(info): void {
     YouDaoRequest.apiTranslate(info)
       .then((res) => {
-        // log.info('[有道翻译事件] - 响应报文 : ', JSON.stringify(res))
-        log.info('[有道翻译事件] - 响应报文 : ', res)
+        // log.debug('[有道翻译事件] - 响应报文 : ', JSON.stringify(res))
+        log.debug('[有道翻译事件] - 响应报文 : ', res)
         const errorCode = res['errorCode']
         if (errorCode === '0') {
           const vo = new TranslateVo(res['translation'])
@@ -56,7 +56,7 @@ class YouDaoChannel implements ITranslateInterface {
   apiTranslateCheck(info): void {
     YouDaoRequest.apiTranslate(info).then(
       (res) => {
-        log.info('[有道翻译校验密钥事件] - 响应报文 : ', res)
+        log.debug('[有道翻译校验密钥事件] - 响应报文 : ', res)
         const errorCode = res['errorCode']
         if (errorCode === '0') {
           GlobalWin.setWin.webContents.send(

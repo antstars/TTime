@@ -21,7 +21,7 @@ class GoogleBuiltInChannel extends TranslateAgent implements ITranslateAgentInte
       GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okIT(info, data))
       return
     }
-    log.info('[Google翻译(内置)事件] - 响应报文 : ', JSON.stringify(data))
+    log.debug('[Google翻译(内置)事件] - 响应报文 : ', JSON.stringify(data))
     const explainsList = data?.[1]?.[0]?.[2]
     const explains: Array<string> = []
     if (isNotNull(explainsList)) {

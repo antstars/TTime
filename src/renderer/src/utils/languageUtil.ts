@@ -30,7 +30,7 @@ export const getLanguageNameConversion = (translateContent): string => {
   }
   // 转换为翻译结果的语种类型
   const languageInputType = LanguageEnum.languageConversionMap.get(language).languageType
-  window.api.logInfoEvent(
+  window.api.logDebugEvent(
     '[翻译事件] - 输入内容语种识别结果 : ',
     language,
     ' , 输入文本语种 : ',
@@ -64,7 +64,7 @@ export const getLanguageResultNameConversion = (translateContent): string => {
   }
   // 转换为翻译结果的语种类型
   languageResultType = LanguageEnum.languageConversionMap.get(languageResultType).languageType
-  window.api.logInfoEvent(
+  window.api.logDebugEvent(
     '[翻译事件] - 翻译内容语种识别结果 : ',
     language,
     ' , 翻译结果语种 : ',

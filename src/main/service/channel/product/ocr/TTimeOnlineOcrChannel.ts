@@ -13,7 +13,7 @@ class TTimeOnlineOcrChannel implements IOcrInterface {
   async apiOcr(info): Promise<void> {
     TTimeRequest.apiOcr(info)
       .then((res) => {
-        log.info('[TTime在线Ocr事件] - 响应报文 : ', JSON.stringify(res))
+        log.debug('[TTime在线Ocr事件] - 响应报文 : ', JSON.stringify(res))
         if (res['status'] != 200) {
           GlobalWin.ocrUpdateContent(YesNoEnum.N, res['msg'])
           return

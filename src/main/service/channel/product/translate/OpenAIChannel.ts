@@ -94,7 +94,7 @@ class OpenAIChannel extends TranslateAgent implements ITranslateAgentInterface {
       )
       return
     }
-    log.info('[OpenAI翻译校验密钥事件] - 响应报文 : ', JSON.stringify(data))
+    log.debug('[OpenAI翻译校验密钥事件] - 响应报文 : ', JSON.stringify(data))
     GlobalWin.setWin.webContents.send(
       'api-check-translate-callback-event',
       TranslateServiceEnum.OPEN_AI,

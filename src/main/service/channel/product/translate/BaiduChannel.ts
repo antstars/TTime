@@ -16,7 +16,7 @@ class BaiduChannel implements ITranslateInterface {
   apiTranslate(info): void {
     BaiduRequest.apiTranslate(info)
       .then((res) => {
-        log.info('[百度翻译事件] - 响应报文 : ', res)
+        log.debug('[百度翻译事件] - 响应报文 : ', res)
         const errorCode = res['error_code']
         let data
         if (isNotNull(errorCode)) {
@@ -43,7 +43,7 @@ class BaiduChannel implements ITranslateInterface {
   apiTranslateCheck(info): void {
     BaiduRequest.apiTranslate(info).then(
       (res) => {
-        log.info('[百度翻译校验密钥事件] - 响应报文 : ', res)
+        log.debug('[百度翻译校验密钥事件] - 响应报文 : ', res)
         const errorCode = res['error_code']
         if (isNull(errorCode)) {
           GlobalWin.setWin.webContents.send(

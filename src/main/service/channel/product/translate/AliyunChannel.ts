@@ -22,7 +22,7 @@ class AliyunChannel implements ITranslateInterface {
           }
           message?: string
         }
-        log.info('[阿里云翻译事件] - 响应报文 : ', body)
+        log.debug('[阿里云翻译事件] - 响应报文 : ', body)
         const code = body.code
         let data = ''
         if (code === 200) {
@@ -62,7 +62,7 @@ class AliyunChannel implements ITranslateInterface {
           code?: string | number
           message?: string
         }
-        log.info('[阿里云翻译校验密钥事件] - 响应报文 : ', response)
+        log.debug('[阿里云翻译校验密钥事件] - 响应报文 : ', response)
         const code = body.code
         if (code === 200) {
           GlobalWin.setWin.webContents.send(

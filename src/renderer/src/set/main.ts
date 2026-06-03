@@ -11,7 +11,7 @@ import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import { initTheme } from '../utils/themeUtil'
 
 try {
-  window.api.logInfoEvent('[设置页] 入口开始执行')
+  window.api.logDebugEvent('[设置页] 入口开始执行')
   // 初始化主题
   initTheme()
 
@@ -38,7 +38,7 @@ try {
     })
     .mount('#app')
 
-  window.api.logInfoEvent('[设置页] 挂载完成')
+  window.api.logDebugEvent('[设置页] 挂载完成')
 } catch (error) {
   const errorValue = error as { stack?: string }
   window.api.logErrorEvent(

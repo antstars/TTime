@@ -17,7 +17,7 @@ class CaiYunChannel implements ITranslateInterface {
   apiTranslate(info): void {
     CaiYunRequest.apiTranslate(info)
       .then((res) => {
-        log.info('[彩云翻译事件] - 响应报文 : ', res)
+        log.debug('[彩云翻译事件] - 响应报文 : ', res)
         const target = res['target']
         const text = target[0]
         if (isNull(text)) {
@@ -46,7 +46,7 @@ class CaiYunChannel implements ITranslateInterface {
   apiTranslateCheck(info): void {
     CaiYunRequest.apiTranslate(info).then(
       (res) => {
-        log.info('[彩云翻译校验密钥事件] - 响应报文 : ', res)
+        log.debug('[彩云翻译校验密钥事件] - 响应报文 : ', res)
         const target = res['target']
         if (!target[0]) {
           // const msg = this.getMsgByErrorCode(errorCode)

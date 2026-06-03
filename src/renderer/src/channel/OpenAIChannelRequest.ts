@@ -228,7 +228,7 @@ class OpenAIChannelRequest {
   }
 
   static logRequestInfo(info, requestInfo, isCheckRequest): void {
-    window.api.logInfoEvent('[OpenAI请求事件] - 最终请求信息 : ', {
+    window.api.logDebugEvent('[OpenAI请求事件] - 最终请求信息 : ', {
       requestUrl: requestInfo.requestUrl,
       requestProtocol: getOpenAIRequestProtocol(info.requestProtocol),
       method: HttpMethodType.POST,
@@ -382,7 +382,7 @@ class OpenAIChannelRequest {
           if (response.ok && contentType.indexOf(EventStreamContentType) !== -1) {
             return
           }
-          window.api.logInfoEvent('[OpenAI翻译事件] - error 连接失败 :', {
+          window.api.logErrorEvent('[OpenAI翻译事件] - 连接失败 :', {
             status: response.status,
             statusText: response.statusText
           })
@@ -420,10 +420,10 @@ class OpenAIChannelRequest {
             return
           }
           OpenAIChannelRequest.sendTranslateEnd(info)
-          window.api.logInfoEvent('[OpenAI翻译事件] - 响应报文 : ', text)
+          window.api.logDebugEvent('[OpenAI翻译事件] - 响应报文 : ', text)
         },
         onerror(err) {
-          window.api.logInfoEvent('[OpenAI翻译事件] - error {}', err)
+          window.api.logErrorEvent('[OpenAI翻译事件] - 请求异常 : ', err)
           sendErrorOnce(err)
           throw err
         }

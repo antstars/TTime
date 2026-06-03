@@ -48,7 +48,7 @@ class OcrChannelFactory {
    * @param info 翻译信息
    */
   static ocr(type, info): void {
-    log.info(
+    log.debug(
       `[${OcrChannelFactory.channelConfigs[type].name}事件] - 请求报文 : `,
       paramsFilter(info)
     )
@@ -63,7 +63,7 @@ class OcrChannelFactory {
    * @param info 翻译信息
    */
   static ocrCheck(type, info): void {
-    log.info(
+    log.debug(
       `[${OcrChannelFactory.channelConfigs[type].name}校验密钥事件] - 请求报文 : `,
       paramsFilter(info)
     )

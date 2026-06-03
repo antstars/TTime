@@ -19,7 +19,7 @@ class BaiduImageOcrChannel extends OcrAgent implements IOcrInterface {
       GlobalWin.ocrUpdateContent(YesNoEnum.N, data)
       return
     }
-    log.info('[百度图片翻译OCR事件] - 响应报文 : ', data)
+    log.debug('[百度图片翻译OCR事件] - 响应报文 : ', data)
     const errorCode = data['error_code']
     let text
     if (errorCode !== '0') {
@@ -40,7 +40,7 @@ class BaiduImageOcrChannel extends OcrAgent implements IOcrInterface {
     const dataObj = res.data
     const data = dataObj['response']
     const info = dataObj['request']
-    log.info('[百度图片翻译OCR校验密钥事件] - 响应报文 : ', data)
+    log.debug('[百度图片翻译OCR校验密钥事件] - 响应报文 : ', data)
     if (res.code === R.ERROR) {
       GlobalWin.setWin.webContents.send(
         'api-check-ocr-callback-event',

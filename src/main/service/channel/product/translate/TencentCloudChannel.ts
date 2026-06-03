@@ -15,7 +15,7 @@ class TencentCloudChannel implements ITranslateInterface {
   apiTranslate(info): void {
     TencentCloudRequest.apiTranslate(info).then(
       (data) => {
-        log.info('[腾讯云翻译事件] - 响应报文 : ', data)
+        log.debug('[腾讯云翻译事件] - 响应报文 : ', data)
         GlobalWin.mainWinSend(
           TranslateChannelFactory.callbackName(info.type),
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -45,7 +45,7 @@ class TencentCloudChannel implements ITranslateInterface {
   apiTranslateCheck(info): void {
     TencentCloudRequest.apiTranslate(info).then(
       (data) => {
-        log.info('[腾讯云翻译校验密钥事件] - 响应报文 : ', data)
+        log.debug('[腾讯云翻译校验密钥事件] - 响应报文 : ', data)
         GlobalWin.setWin.webContents.send(
           'api-check-translate-callback-event',
           TranslateServiceEnum.TENCENT_CLOUD,

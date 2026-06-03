@@ -130,6 +130,19 @@ function createSetWindow(): void {
   })
 
   win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    if (message.includes('ElementPlusError: [el-radio] [API] label act as value')) {
+      log.debug(
+        '[设置窗口] 已过滤Element Plus兼容提示 level=',
+        level,
+        ' message=',
+        message,
+        ' line=',
+        line,
+        ' sourceId=',
+        sourceId
+      )
+      return
+    }
     if (level < 2 && !message.includes('[Vue warn]') && !message.includes('[设置窗口异常]')) {
       return
     }

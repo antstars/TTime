@@ -17,7 +17,7 @@ class EcDictChannel implements ITranslateInterface {
     info.isTranslateCheckType = false
     EcDictRequest.apiTranslate(info)
       .then(async (res: any) => {
-        log.info('[EcDict翻译事件] - 响应报文 : ', res)
+        log.debug('[EcDict翻译事件] - 响应报文 : ', res)
         if (res.length <= 0) {
           GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okT('未找到词'))
           return
@@ -36,7 +36,7 @@ class EcDictChannel implements ITranslateInterface {
         GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okD(vo))
       })
       .catch((err) => {
-        log.info('[EcDict翻译事件] - 异常 : ', err)
+        log.error('[EcDict翻译事件] - 异常 : ', err)
         GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okIT(info, err))
       })
   }

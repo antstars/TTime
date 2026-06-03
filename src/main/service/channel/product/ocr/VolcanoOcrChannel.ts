@@ -17,7 +17,7 @@ class VolcanoOcrChannel implements IOcrInterface {
   async apiOcr(info): Promise<void> {
     VolcanoRequest.apiOcr(info)
       .then((res) => {
-        log.info('[火山Ocr事件] - 响应报文 : ', res)
+        log.debug('[火山Ocr事件] - 响应报文 : ', res)
         // 火山接口报错时，接口参数时而为 ResponseMetadata 时而为 ResponseMetaData 很奇怪的操作 这里兼容处理
         const errorInfo = (res['ResponseMetadata'] || res['ResponseMetaData'])?.Error
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -61,7 +61,7 @@ class VolcanoOcrChannel implements IOcrInterface {
   async apiOcrCheck(info): Promise<void> {
     VolcanoRequest.apiOcr(info).then(
       (res) => {
-        log.info('[火山Ocr校验密钥事件] - 响应报文 : ', res)
+        log.debug('[火山Ocr校验密钥事件] - 响应报文 : ', res)
         // 火山接口报错时，接口参数时而为 ResponseMetadata 时而为 ResponseMetaData 很奇怪的操作 这里兼容处理
         const errorInfo = (res['ResponseMetadata'] || res['ResponseMetaData'])?.Error
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

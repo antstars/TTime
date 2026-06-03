@@ -32,7 +32,7 @@ class BingDictChannel extends TranslateAgent implements ITranslateAgentInterface
     BingDictRequest.apiTranslate(info)
       .then(async (res) => {
         // 字典响应报文太多 这里就不做日志输出了
-        // log.info('[BingDict翻译事件] - 响应报文 : ', res)
+        // log.debug('[BingDict翻译事件] - 响应报文 : ', res)
         let match
         const explains: Array<string> = []
         // 匹配 其他释义字段信息 其他释义分化为了两段 下面一起匹配合并
@@ -110,7 +110,7 @@ class BingDictChannel extends TranslateAgent implements ITranslateAgentInterface
         GlobalWin.mainWinSend('agent-api-translate', info)
       })
       .catch((err) => {
-        log.info('[BingDict翻译事件] - 异常 : ', err)
+        log.error('[BingDict翻译事件] - 异常 : ', err)
         GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okIT(info, err))
       })
   }
@@ -149,7 +149,7 @@ class BingDictChannel extends TranslateAgent implements ITranslateAgentInterface
     const dataObj = res.data
     const data = dataObj['response']
     const info = dataObj['request']
-    log.info('[BingDict翻译事件] - 响应报文 : ', JSON.stringify(data))
+    log.debug('[BingDict翻译事件] - 响应报文 : ', JSON.stringify(data))
     if (res.code === R.ERROR) {
       GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okIT(info, data))
       return

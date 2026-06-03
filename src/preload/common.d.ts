@@ -2,6 +2,7 @@ import { ElectronAPI } from '@electron-toolkit/preload'
 
 declare global {
   interface api {
+    logDebugEvent
     logInfoEvent
     logErrorEvent
     getSystemTypeEvent

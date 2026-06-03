@@ -25,12 +25,12 @@ class BingChannelRequest {
    * 刷新Token
    */
   static refreshToken = async (): Promise<void> => {
-    window.api.logInfoEvent('[Bing获取Token事件] - 开始检测token ')
+    window.api.logDebugEvent('[Bing获取Token事件] - 开始检测token ')
     if (isNull(BingChannelRequest.BING_TOKEN)) {
-      window.api.logInfoEvent('[Bing获取Token事件] - Token不存在，开始初始化 ')
+      window.api.logDebugEvent('[Bing获取Token事件] - Token不存在，开始初始化 ')
       // 不存在Token时进行获取
       await BingChannelRequest.getToken().then((token) => {
-        window.api.logInfoEvent('[Bing获取Token事件] - Token获取成功：', token)
+        window.api.logDebugEvent('[Bing获取Token事件] - Token获取成功')
         BingChannelRequest.BING_TOKEN = token
       })
       return
@@ -44,15 +44,15 @@ class BingChannelRequest {
     // 时间差，单位：秒
     const timeDifference = timestamp - currentTime
     if (timeDifference <= 60) {
-      window.api.logInfoEvent('[Bing获取Token事件] - Token已失效，开始重新获取 ')
+      window.api.logDebugEvent('[Bing获取Token事件] - Token已失效，开始重新获取 ')
       // 剩余时间小于或等于一分钟 重新更新Token
       await BingChannelRequest.getToken()
         .then((token) => {
-          window.api.logInfoEvent('[Bing获取Token事件] - Token获取成功：', token)
+          window.api.logDebugEvent('[Bing获取Token事件] - Token获取成功')
           BingChannelRequest.BING_TOKEN = token
         })
         .catch((err) => {
-          window.api.logInfoEvent('[Bing获取Token事件] - 异常：', err)
+          window.api.logErrorEvent('[Bing获取Token事件] - 异常：', err)
         })
     }
   }
@@ -112,7 +112,7 @@ class BingChannelRequest {
     // 这里作补充作用
     BingChannelRequest.apiTranslateByBingRequest(info)
       .then((bingRes) => {
-        window.api.logInfoEvent('[Bing翻译事件] - 响应报文：', JSON.stringify(bingRes))
+        window.api.logDebugEvent('[Bing翻译事件] - 响应报文：', JSON.stringify(bingRes))
         window.api['agentApiTranslateCallback'](
           R.okD(
             new AgentTranslateCallbackVo(info, {
@@ -123,7 +123,7 @@ class BingChannelRequest {
         )
       })
       .catch((err) => {
-        window.api.logInfoEvent('[Bing翻译事件] - 异常：', err)
+        window.api.logErrorEvent('[Bing翻译事件] - 异常：', err)
         window.api['agentApiTranslateCallback'](
           R.errorD(new AgentTranslateCallbackVo(info, commonError('Bing翻译事件', err)))
         )

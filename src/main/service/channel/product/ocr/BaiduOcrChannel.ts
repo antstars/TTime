@@ -31,10 +31,10 @@ class BaiduOcrChannel implements IOcrInterface {
     if (isForceGet || isNull(BaiduOcrChannel.token)) {
       // 获取前先置空token
       BaiduOcrChannel.token = ''
-      log.info('[百度Ocr获取Token事件] - 请求报文 : ', paramsFilter(info))
+      log.debug('[百度Ocr获取Token事件] - 请求报文 : ', paramsFilter(info))
       await BaiduRequest.apiOcrGetToken(info)
         .then((res) => {
-          log.info(
+          log.debug(
             '[百度Ocr获取Token事件] - 响应报文 : ',
             responseFilterByCustomField(
               res,
@@ -48,7 +48,7 @@ class BaiduOcrChannel implements IOcrInterface {
         })
         .catch((error) => {
           const res = commonError('百度Ocr获取Token', error)
-          log.info('[百度Ocr获取Token事件] - 响应异常 : ', res)
+          log.error('[百度Ocr获取Token事件] - 响应异常 : ', res)
           const errorMsg = res['error_description']
           if ('unknown client id'.indexOf(errorMsg) != -1) {
             BaiduOcrChannel.tokenErrMsg = 'API Key不存在，请检查后再试'
@@ -67,14 +67,14 @@ class BaiduOcrChannel implements IOcrInterface {
   async apiOcr(info): Promise<void> {
     await this.injectionToken(info, false)
     if (isNull(BaiduOcrChannel.token)) {
-      log.info('[百度Ocr事件] - 获取Token失败 :', BaiduOcrChannel.tokenErrMsg)
+      log.error('[百度Ocr事件] - 获取Token失败 :', BaiduOcrChannel.tokenErrMsg)
       GlobalWin.ocrUpdateContent(YesNoEnum.N, BaiduOcrChannel.tokenErrMsg)
       return
     }
     info.token = BaiduOcrChannel.token
     BaiduRequest.apiOcr(info)
       .then((res) => {
-        log.info('[百度Ocr事件] - 响应报文 : ', res)
+        log.debug('[百度Ocr事件] - 响应报文 : ', res)
         const errorCode = res['error_code']
         if (isNotNull(errorCode)) {
           let errorMsg = this.getMsgByErrorCode(errorCode)
@@ -100,7 +100,7 @@ class BaiduOcrChannel implements IOcrInterface {
   async apiOcrCheck(info): Promise<void> {
     await this.injectionToken(info, true)
     if (isNull(BaiduOcrChannel.token)) {
-      log.info('[百度Ocr校验密钥事件] - 获取Token失败 :', BaiduOcrChannel.tokenErrMsg)
+      log.error('[百度Ocr校验密钥事件] - 获取Token失败 :', BaiduOcrChannel.tokenErrMsg)
       GlobalWin.setWin.webContents.send(
         'api-check-ocr-callback-event',
         TranslateServiceEnum.BAIDU,
@@ -111,7 +111,7 @@ class BaiduOcrChannel implements IOcrInterface {
     info.token = BaiduOcrChannel.token
     BaiduRequest.apiOcr(info).then(
       (res) => {
-        log.info('[百度Ocr校验密钥事件] - 响应报文 : ', res)
+        log.debug('[百度Ocr校验密钥事件] - 响应报文 : ', res)
         const errorCode = res['error_code']
         if (isNotNull(errorCode)) {
           let errorMsg = this.getMsgByErrorCode(errorCode)

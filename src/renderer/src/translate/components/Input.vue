@@ -184,10 +184,10 @@ const translateFun = (): void => {
   emit('show-result-event', false)
   // 翻译内容
   let translateContentDealWith = translateContent.value
-  window.api.logInfoEvent('[翻译事件] - 翻译内容 : ', translateContentDealWith)
+  window.api.logDebugEvent('[翻译事件] - 翻译内容 : ', translateContentDealWith)
   // 替换所有换行符、回车符后如果发送的消息还是为空则默认不继续进行操作
   if (isContentNull(translateContentDealWith)) {
-    window.api.logInfoEvent('[翻译事件] - 翻译内容过滤后为空')
+    window.api.logDebugEvent('[翻译事件] - 翻译内容过滤后为空')
     translateContent.value = ''
     // 屏幕截图识别中状态重置
     screenshotRestore()

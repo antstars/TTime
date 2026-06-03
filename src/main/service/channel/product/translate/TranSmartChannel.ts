@@ -16,7 +16,7 @@ class TranSmartChannel implements ITranslateInterface {
   apiTranslate(info): void {
     TranSmartRequest.apiTranslate(info)
       .then((res) => {
-        log.info('[腾讯交互翻译(内置)事件] - 响应报文 : ', res)
+        log.debug('[腾讯交互翻译(内置)事件] - 响应报文 : ', res)
         const autoTranslation = res['auto_translation']
         if (isNull(autoTranslation)) {
           const errMessage = this.getMsgByErrorCode(res['message'])

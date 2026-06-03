@@ -16,7 +16,7 @@ class BingChannel extends TranslateAgent implements ITranslateAgentInterface {
     const data = dataObj['response']
     const info = dataObj['request']
     if (res.code === R.ERROR) {
-      log.info('[Bing翻译事件] - 响应报文 : ', JSON.stringify(data))
+      log.debug('[Bing翻译事件] - 响应报文 : ', JSON.stringify(data))
       GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okIT(info, data))
       return
     }

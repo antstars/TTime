@@ -50,6 +50,13 @@ ipcMain.on('jump-to-page-event', (_event, url) => {
 })
 
 /**
+ * 日志 - debug级别
+ */
+ipcMain.handle('log-debug-event', (_event, ...text) => {
+  log.debug(...text)
+})
+
+/**
  * 日志 - info级别
  */
 ipcMain.handle('log-info-event', (_event, ...text) => {
@@ -117,7 +124,16 @@ ipcMain.handle('openai-node-request-probe', async (_event, probeInfo) => {
     },
     validateStatus: () => true
   }
-  log.info('[OpenAI Node探测事件] - 请求信息 : ', {
+  log.info('[OpenAI Node探测事件] - 请求摘要 : ', {
+    requestUrl,
+    requestProtocol,
+    method: requestConfig.method,
+    model,
+    stream: data?.stream,
+    isCheckRequest,
+    proxyEnabled
+  })
+  log.debug('[OpenAI Node探测事件] - 请求详情 : ', {
     requestUrl,
     requestProtocol,
     method: requestConfig.method,
@@ -132,7 +148,13 @@ ipcMain.handle('openai-node-request-probe', async (_event, probeInfo) => {
     const response = await axios(requestConfig)
     const responseData = stringifyProbeData(response.data)
     const remoteAddress = getProbeRemoteAddress(response.request)
-    log.info('[OpenAI Node探测事件] - 响应信息 : ', {
+    log.info('[OpenAI Node探测事件] - 响应摘要 : ', {
+      requestUrl,
+      status: response.status,
+      statusText: response.statusText,
+      remoteAddress
+    })
+    log.debug('[OpenAI Node探测事件] - 响应详情 : ', {
       requestUrl,
       status: response.status,
       statusText: response.statusText,

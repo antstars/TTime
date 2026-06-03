@@ -250,7 +250,7 @@ class AzureOpenAIChannelRequest {
             if (response.ok && contentType.indexOf(EventStreamContentType) !== -1) {
               return // everything's good
             }
-            window.api.logInfoEvent('[AzureOpenAI翻译事件] - error 连接失败 :', {
+            window.api.logErrorEvent('[AzureOpenAI翻译事件] - 连接失败 :', {
               status: response.status,
               statusText: response.statusText
             })
@@ -305,10 +305,10 @@ class AzureOpenAIChannelRequest {
                 })
               )
             )
-            window.api.logInfoEvent('[AzureOpenAI翻译事件] - 响应报文 : ', text)
+            window.api.logDebugEvent('[AzureOpenAI翻译事件] - 响应报文 : ', text)
           },
           onerror(err) {
-            window.api.logInfoEvent('[AzureOpenAI翻译事件] - error {}', err)
+            window.api.logErrorEvent('[AzureOpenAI翻译事件] - 请求异常 : ', err)
             sendErrorOnce(err)
             throw err
           }

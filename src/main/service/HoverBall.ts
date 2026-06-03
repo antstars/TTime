@@ -185,13 +185,13 @@ if (!SystemTypeEnum.isMac()) {
       GlobalShortcutEvent.isChoice = true
       let selectedText = await GlobalShortcutEvent.getSelectedText()
       if (GlobalShortcutEvent.isBlankText(selectedText)) {
-        log.info('[悬浮球取词] - 本次复制选区为空，已跳过翻译')
+        log.debug('[悬浮球取词] - 本次复制选区为空，已跳过翻译')
         return
       }
       selectedText = GlobalShortcutEvent.splitSingleCamelCase(selectedText)
       selectedText = GlobalShortcutEvent.splitSingleUnderScore(selectedText)
       if (GlobalShortcutEvent.isBlankText(selectedText)) {
-        log.info('[悬浮球取词] - 本次复制选区处理后为空，已跳过翻译')
+        log.debug('[悬浮球取词] - 本次复制选区处理后为空，已跳过翻译')
         return
       }
       // 推送给Vue页面进行更新翻译输入内容

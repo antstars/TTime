@@ -23,7 +23,7 @@ class DeepLBuiltInChannel extends TranslateAgent implements ITranslateAgentInter
       )
       return
     }
-    log.info('[DeepL(内置)翻译事件] - 响应报文 : ', JSON.stringify(data))
+    log.debug('[DeepL(内置)翻译事件] - 响应报文 : ', JSON.stringify(data))
     const textInfo = data?.['result']?.texts[0]
     const text = textInfo.text
     const vo = new TranslateVo([text])

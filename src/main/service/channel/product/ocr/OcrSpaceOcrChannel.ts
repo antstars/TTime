@@ -17,7 +17,7 @@ class OcrSpaceOcrChannel implements IOcrInterface {
   async apiOcr(info): Promise<void> {
     OcrSpaceRequest.apiOcr(info).then(
       (res) => {
-        log.info('[OcrSpace事件] - 响应报文 : ', res)
+        log.debug('[OcrSpace事件] - 响应报文 : ', res)
         if (isNull(res['ParsedResults'])) {
           let errorMsg = res['ErrorMessage']?.[0]
           errorMsg = isNull(errorMsg) ? res['SearchablePDFURL'] : errorMsg
@@ -43,7 +43,7 @@ class OcrSpaceOcrChannel implements IOcrInterface {
     info.language = 'eng'
     OcrSpaceRequest.apiOcr(info).then(
       (res) => {
-        log.info('[OcrSpace校验密钥事件] - 响应报文 : ', res)
+        log.debug('[OcrSpace校验密钥事件] - 响应报文 : ', res)
         if (isNull(res['ParsedResults'])) {
           let errorMsg = res['ErrorMessage']?.[0]
           errorMsg = isNull(errorMsg) ? res['SearchablePDFURL'] : errorMsg

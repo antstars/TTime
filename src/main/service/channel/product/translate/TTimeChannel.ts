@@ -14,7 +14,7 @@ class TTimeChannel implements ITranslateInterface {
   apiTranslate(info): void {
     TTimeRequest.apiTranslate(info)
       .then((res) => {
-        log.info('[TTime翻译事件] - 响应报文 : ', res)
+        log.debug('[TTime翻译事件] - 响应报文 : ', res)
         let data
         if (res['status'] !== 200) {
           data = res['msg']

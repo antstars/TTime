@@ -91,12 +91,12 @@ class GlobalShortcutEvent {
   static registerBuild(info: GlobalShortcutClass): R {
     // 检查快捷方式是否已注册。
     if (globalShortcut.isRegistered(info.key)) {
-      log.info(info.key + '快捷键已注册')
+      log.debug(info.key + '快捷键已注册')
       return R.error(info.key + '快捷键已注册')
     }
     // 注册一个快捷并监听
     if (!globalShortcut.register(info.key, info.callback)) {
-      log.info(info.key + '快捷键注册失败')
+      log.warn(info.key + '快捷键注册失败')
       return R.error(info.key + '快捷键注册失败')
     }
     return R.ok()
@@ -233,13 +233,13 @@ class GlobalShortcutEvent {
       GlobalShortcutEvent.isChoice = true
       let selectedText = await GlobalShortcutEvent.getSelectedText()
       if (GlobalShortcutEvent.isBlankText(selectedText)) {
-        log.info('[划词翻译] - 本次复制选区为空，已跳过翻译')
+        log.debug('[划词翻译] - 本次复制选区为空，已跳过翻译')
         return
       }
       selectedText = GlobalShortcutEvent.splitSingleCamelCase(selectedText)
       selectedText = GlobalShortcutEvent.splitSingleUnderScore(selectedText)
       if (GlobalShortcutEvent.isBlankText(selectedText)) {
-        log.info('[划词翻译] - 本次复制选区处理后为空，已跳过翻译')
+        log.debug('[划词翻译] - 本次复制选区处理后为空，已跳过翻译')
         return
       }
       // 推送给Vue页面进行更新翻译输入内容
@@ -327,15 +327,15 @@ class GlobalShortcutEvent {
     try {
       currentClipboardContent = clipboard.readText()
       hasClipboardSnapshot = true
-      log.info('[划词翻译] - 读取剪贴板旧文本快照 : ', currentClipboardContent)
+      log.debug('[划词翻译] - 读取剪贴板旧文本快照 : ', currentClipboardContent)
       clipboard.clear()
       await new Promise((resolve) => setTimeout(resolve, translateChoiceDelay))
-      log.info('[划词翻译] - 执行复制选区操作')
+      log.debug('[划词翻译] - 执行复制选区操作')
       robot.keyToggle('c', 'down', isMac ? 'command' : 'control')
       await new Promise((resolve) => setTimeout(resolve, translateChoiceDelay))
       robot.keyToggle('c', 'up', isMac ? 'command' : 'control')
       selectedText = clipboard.readText()
-      log.info('[划词翻译] - 读取本次复制选区内容 : ', selectedText)
+      log.debug('[划词翻译] - 读取本次复制选区内容 : ', selectedText)
     } finally {
       GlobalShortcutEvent.releaseCopyKey()
       if (hasClipboardSnapshot) {

@@ -17,7 +17,7 @@ class NiuTransChannel implements ITranslateInterface {
     const key = TranslateChannelFactory.callbackName(info.type)
     NiuTransRequest.apiTranslate(info)
       .then((res) => {
-        log.info('[小牛翻译事件] - 响应报文 : ', res)
+        log.debug('[小牛翻译事件] - 响应报文 : ', res)
         const errorCode = res['error_code']
         if (isNotNull(errorCode)) {
           GlobalWin.mainWinSend(key, R.okIT(info, this.getMsgByErrorCode(res)))
@@ -38,7 +38,7 @@ class NiuTransChannel implements ITranslateInterface {
   apiTranslateCheck(info): void {
     NiuTransRequest.apiTranslate(info).then(
       (res) => {
-        log.info('[小牛翻译校验密钥事件] - 响应报文 : ', res)
+        log.debug('[小牛翻译校验密钥事件] - 响应报文 : ', res)
         const errorCode = res['error_code']
         if (isNotNull(errorCode)) {
           GlobalWin.setWin.webContents.send(

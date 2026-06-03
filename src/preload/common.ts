@@ -1,6 +1,13 @@
 import { ipcRenderer } from 'electron'
 
 /**
+ * 日志 - debug级别
+ */
+const logDebugEvent = (...text): void => {
+  ipcRenderer.invoke('log-debug-event', ...text)
+}
+
+/**
  * 日志 - info级别
  */
 const logInfoEvent = (...text): void => {
@@ -111,6 +118,7 @@ const textWriteShearPlateEvent = (text): void => {
 }
 
 export default {
+  logDebugEvent,
   logInfoEvent,
   logErrorEvent,
   getSystemTypeEvent,

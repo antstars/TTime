@@ -15,7 +15,7 @@ class TencentCloudOcrChannel implements IOcrInterface {
   async apiOcr(info): Promise<void> {
     TencentCloudRequest.apiOcr(info).then(
       (res) => {
-        log.info('[腾讯云Ocr事件] - 响应报文 : ', res)
+        log.debug('[腾讯云Ocr事件] - 响应报文 : ', res)
         const text = res.TextDetections?.map((detection) => detection.DetectedText).join('\n')
         GlobalWin.ocrUpdateContent(YesNoEnum.Y, text)
       },
@@ -41,7 +41,7 @@ class TencentCloudOcrChannel implements IOcrInterface {
   async apiOcrCheck(info): Promise<void> {
     TencentCloudRequest.apiOcr(info).then(
       (res) => {
-        log.info('[腾讯云OCR校验密钥事件] - 响应报文 : ', res)
+        log.debug('[腾讯云OCR校验密钥事件] - 响应报文 : ', res)
         GlobalWin.setWin.webContents.send(
           'api-check-ocr-callback-event',
           OcrServiceEnum.TENCENT_CLOUD,

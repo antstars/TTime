@@ -16,7 +16,7 @@ class VolcanoChannel implements ITranslateInterface {
   apiTranslate(info): void {
     VolcanoRequest.apiTranslate(info)
       .then((res) => {
-        log.info('[火山翻译事件] - 响应报文 : ', res)
+        log.debug('[火山翻译事件] - 响应报文 : ', res)
         // 火山接口报错时，接口参数时而为 ResponseMetadata 时而为 ResponseMetaData 很奇怪的操作 这里兼容处理
         const errorInfo = (res['ResponseMetadata'] || res['ResponseMetaData'])?.Error
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -49,7 +49,7 @@ class VolcanoChannel implements ITranslateInterface {
     info.languageType = 'zh'
     VolcanoRequest.apiTranslate(info).then(
       (res) => {
-        log.info('[火山翻译校验密钥事件] - 响应报文 : ', res)
+        log.debug('[火山翻译校验密钥事件] - 响应报文 : ', res)
         // 火山接口报错时，接口参数时而为 ResponseMetadata 时而为 ResponseMetaData 很奇怪的操作 这里兼容处理
         const errorInfo = (res['ResponseMetadata'] || res['ResponseMetaData'])?.Error
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment

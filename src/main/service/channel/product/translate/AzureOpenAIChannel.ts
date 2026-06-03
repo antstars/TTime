@@ -98,7 +98,7 @@ class AzureOpenAIChannel extends TranslateAgent implements ITranslateAgentInterf
       )
       return
     }
-    log.info('[AzureOpenAI翻译校验密钥事件] - 响应报文 : ', JSON.stringify(data))
+    log.debug('[AzureOpenAI翻译校验密钥事件] - 响应报文 : ', JSON.stringify(data))
     GlobalWin.setWin.webContents.send(
       'api-check-translate-callback-event',
       TranslateServiceEnum.AZURE_OPEN_AI,

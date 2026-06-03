@@ -16,7 +16,7 @@ class XfyunOcrChannel implements IOcrInterface {
   async apiOcr(info): Promise<void> {
     XfyunRequest.apiOcr(info)
       .then((res) => {
-        log.info('[讯飞Ocr事件] - 响应报文 : ', res)
+        log.debug('[讯飞Ocr事件] - 响应报文 : ', res)
         if (res['header']['code'] !== 0) {
           GlobalWin.ocrUpdateContent(YesNoEnum.N, this.getMsgByErrorCode(res))
           return
@@ -55,7 +55,7 @@ class XfyunOcrChannel implements IOcrInterface {
   async apiOcrCheck(info): Promise<void> {
     XfyunRequest.apiOcr(info)
       .then((res) => {
-        log.info('[讯飞Ocr校验密钥事件] - 响应报文 : ', res)
+        log.debug('[讯飞Ocr校验密钥事件] - 响应报文 : ', res)
         if (res['header']['code'] !== 0) {
           GlobalWin.setWin.webContents.send(
             'api-check-ocr-callback-event',

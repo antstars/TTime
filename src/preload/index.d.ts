@@ -10,6 +10,7 @@ declare global {
     openSetPageEvent
     alwaysOnTopEvent
     windowHeightChangeMaxEvent
+    logDebugEvent
     logInfoEvent
     logErrorEvent
     screenshotEndNotifyEvent
