@@ -21,7 +21,7 @@
                   <div class='left'>
                     <img
                       class='translate-service-logo none-select'
-                      :src='element.serviceInfo.logo'
+                      :src='element.serviceInfo?.logo'
                     />
                     <span class='translate-service-name none-select'>{{
                         element.serviceName

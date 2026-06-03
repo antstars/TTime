@@ -30,7 +30,8 @@ const normalizeTranslateServiceMap = (translateServiceMap?: Map<string, any>): M
   const map = cloneTranslateServiceMap(translateServiceMap)
   const normalizedMap = new Map()
 
-  map.forEach((translateService, key) => {
+  map.forEach((translateServiceRaw, key) => {
+    const translateService = { ...translateServiceRaw }
     if (translateService['type'] === 'PAPAGO') {
       translateService['type'] = TranslateServiceEnum.PAPAGO
     }
