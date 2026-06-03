@@ -188,9 +188,10 @@ Object.keys(TranslateServiceEnum)
  *
  * @param type 翻译渠道类型
  * @param msg  回调消息内容
+ * @param info 翻译服务实例信息
  */
-const apiTranslateResultMsgCallbackEvent = (type, msg): void => {
-  ipcRenderer.invoke('api-translate-result-msg-callback-event', type, msg)
+const apiTranslateResultMsgCallbackEvent = (type, msg, info = null): void => {
+  ipcRenderer.invoke('api-translate-result-msg-callback-event', type, msg, info)
 }
 
 /**

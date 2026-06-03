@@ -229,18 +229,26 @@ const translateFun = (): void => {
     inputLanguage,
     resultLanguage
   })
-  const requestMap = new Map()
+  const requestList: Array<{ type: string; info: Record<string, any> }> = []
   // 遍历当前正在使用的翻译源
   for (const translateService of translateServiceMapData.values() as Iterable<any>) {
     // 翻译源类型
     const type = translateService.type
+    const serviceRequestInfo = {
+      requestId: translateRecordVo.requestId,
+      id: translateService.id
+    }
     // 如果不为自动识别 则从翻译源对应的文字语言中找到对应的语言代码
     const inputServiceLanguage = inputLanguage?.serviceList?.find((service) => {
       return service.type === translateService.type
     })
     if (isNull(inputServiceLanguage)) {
       // 此处校验是用于用户在使用多翻译源情况下 部分翻译源支持某种语言 而部分翻译源不支持
-      window.api.apiTranslateResultMsgCallbackEvent(translateService.type, '不支持翻译当前语言')
+      window.api.apiTranslateResultMsgCallbackEvent(
+        translateService.type,
+        '不支持翻译当前语言',
+        serviceRequestInfo
+      )
       continue
     }
     // 输入文字语言类型
@@ -250,7 +258,11 @@ const translateFun = (): void => {
       return service.type === translateService.type
     })
     if (isNull(resultServiceLanguage)) {
-      window.api.apiTranslateResultMsgCallbackEvent(translateService.type, '不支持翻译当前语言结果')
+      window.api.apiTranslateResultMsgCallbackEvent(
+        translateService.type,
+        '不支持翻译当前语言结果',
+        serviceRequestInfo
+      )
       continue
     }
     // 翻译结果语言类型
@@ -274,17 +286,17 @@ const translateFun = (): void => {
         info[key] = translateService[key]
       })
     }
-    requestMap.set(type, info)
+    requestList.push({ type, info })
   }
   // 翻译记录状态
   const translateHistoryStatus = cacheGet('translateHistoryStatus') === YesNoEnum.Y
   if (translateHistoryStatus) {
     // 构建翻译记录信息
     const translateServiceRecordList = []
-    requestMap.forEach((value, key) => {
+    requestList.forEach(({ type, info }) => {
       const serviceRecordVo = new TranslateServiceRecordVo()
-      serviceRecordVo.translateServiceType = key
-      serviceRecordVo.translateServiceId = value.id
+      serviceRecordVo.translateServiceType = type
+      serviceRecordVo.translateServiceId = info.id
       serviceRecordVo.translateStatus = false
       translateServiceRecordList.push(serviceRecordVo)
     })
@@ -296,9 +308,9 @@ const translateFun = (): void => {
     updateTranslateRecordList(translateRecordList)
   }
   // 触发翻译
-  requestMap.forEach((value, key) => {
+  requestList.forEach(({ type, info }) => {
     // 此处触发之后会异步回调到 *ApiTranslateCallbackEvent 方法中去执行
-    window.api.apiUniteTranslate(key, value)
+    window.api.apiUniteTranslate(type, info)
   })
 }
 

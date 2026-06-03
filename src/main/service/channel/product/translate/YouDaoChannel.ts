@@ -34,6 +34,7 @@ class YouDaoChannel implements ITranslateInterface {
             )
           }
           vo.requestId = info.requestId
+          vo.translateServiceId = info.id
           GlobalWin.mainWinSend(TranslateChannelFactory.callbackName(info.type), R.okD(vo))
         } else {
           GlobalWin.mainWinSend(

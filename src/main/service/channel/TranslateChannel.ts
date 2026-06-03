@@ -43,8 +43,11 @@ ipcMain.handle('agent-api-translate-callback', (_event, res) => {
  * @param channel 翻译类型
  * @param msg     回调消息内容
  */
-ipcMain.handle('api-translate-result-msg-callback-event', (_event, channel, msg) => {
-  GlobalWin.mainWinSend(channel.toLowerCase() + '-api-translate-callback-event', R.okT(msg))
+ipcMain.handle('api-translate-result-msg-callback-event', (_event, channel, msg, info) => {
+  GlobalWin.mainWinSend(
+    channel.toLowerCase() + '-api-translate-callback-event',
+    info ? R.okIT(info, msg) : R.okT(msg)
+  )
 })
 
 /**

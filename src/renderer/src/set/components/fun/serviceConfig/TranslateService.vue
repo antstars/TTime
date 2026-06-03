@@ -549,11 +549,6 @@ window.api.apiCheckTranslateCallbackEvent(async (type, res) => {
       insideTranslateService[key] = data[key]
     })
   }
-  // 验证成功后处理
-  if (useStatus && checkStatus) {
-    // 关闭其他已开启的相同类型翻译服务
-    await serviceCloseOtherSameTypesInUse(insideTranslateService)
-  }
   await saveService(insideTranslateService)
   if (translateServiceThis.value?.id === insideTranslateService.id) {
     translateServiceThis.value = insideTranslateService
@@ -576,32 +571,10 @@ const serviceUseStatusChange = async (translateService): Promise<void> => {
     translateService.useStatus = false
     return ElMessageExtend.warning('未验证的服务无法使用')
   }
-  // 关闭其他已开启的相同类型翻译服务
-  await serviceCloseOtherSameTypesInUse(translateService)
   // 保存翻译源更新的信息
   await saveService(translateService)
   // 更新翻译源通知
   window.api.updateTranslateServiceNotify()
-}
-
-/**
- * 关闭其他已开启的相同类型翻译服务
- *
- * @param translateService 当前开启的服务
- */
-const serviceCloseOtherSameTypesInUse = async (translateService): Promise<void> => {
-  for (const insideTranslateService of getTranslateServiceMap().values()) {
-    if (
-      insideTranslateService.type === translateService.type &&
-      insideTranslateService.id !== translateService.id &&
-      insideTranslateService.useStatus &&
-      translateService.useStatus
-    ) {
-      insideTranslateService.useStatus = false
-      await saveService(insideTranslateService)
-      break
-    }
-  }
 }
 
 /**

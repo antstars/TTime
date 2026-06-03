@@ -150,6 +150,11 @@ const getTranslateServiceBackEventName = (translateService): string => {
   return translateService.type.toLowerCase() + 'ApiTranslateCallbackEvent'
 }
 
+const isCurrentTranslateServiceResponse = (res): boolean => {
+  const translateServiceId = res?.data?.translateServiceId
+  return isNull(translateServiceId) || translateServiceId === props.translateService.id
+}
+
 /**
  * 监听 props.translateService 数据变化
  *
@@ -248,6 +253,9 @@ const copySnakeCase = (text): void => {
  * 翻译回调 - 异步处理
  */
 window.api[getTranslateServiceBackEventName(props.translateService)]((res) => {
+  if (!isCurrentTranslateServiceResponse(res)) {
+    return
+  }
   const data = res.data
   const translateList = data['translateList']
   const translatedResultContentTemp = translateList.join('\n')
