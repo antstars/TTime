@@ -5,7 +5,12 @@ import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import { isNull } from '../../common/utils/validate'
 import log from '../utils/log'
 import GlobalWin from './GlobalWin'
-import { injectAgent, injectWinAgent, normalizeAgentConfig } from '../utils/RequestUtil'
+import {
+  injectAgent,
+  injectWinAgent,
+  isProxyEnabled,
+  normalizeAgentConfig
+} from '../utils/RequestUtil'
 import { StoreConfigFunTypeEnum } from '../../common/enums/StoreConfigFunTypeEnum'
 import StoreService from './StoreService'
 import { StoreTypeEnum } from '../../common/enums/StoreTypeEnum'
@@ -99,6 +104,8 @@ ipcMain.handle('openai-node-request-probe', async (_event, probeInfo) => {
   const model = probeInfo?.model
   const data = probeInfo?.data
   const isCheckRequest = probeInfo?.isCheckRequest === true
+  const agentConfig = normalizeAgentConfig(StoreService.configGet('agentConfig'))
+  const proxyEnabled = isProxyEnabled(agentConfig)
   const requestConfig: any = {
     url: requestUrl,
     method: 'post',
@@ -116,16 +123,20 @@ ipcMain.handle('openai-node-request-probe', async (_event, probeInfo) => {
     method: requestConfig.method,
     model,
     stream: data?.stream,
-    isCheckRequest
+    isCheckRequest,
+    proxyEnabled,
+    curlTemplate: buildProbeCurlTemplate(requestUrl, data)
   })
   try {
     await injectAgent(requestConfig)
     const response = await axios(requestConfig)
     const responseData = stringifyProbeData(response.data)
+    const remoteAddress = getProbeRemoteAddress(response.request)
     log.info('[OpenAI Node探测事件] - 响应信息 : ', {
       requestUrl,
       status: response.status,
       statusText: response.statusText,
+      remoteAddress,
       responseData
     })
     return {
@@ -137,10 +148,15 @@ ipcMain.handle('openai-node-request-probe', async (_event, probeInfo) => {
   } catch (error: any) {
     const response = error?.response
     const hasHttpResponse = !isNull(response?.status)
+    const remoteAddress = getProbeRemoteAddress(error?.request)
     log.error('[OpenAI Node探测事件] - 异常响应报文 : ', {
       requestUrl,
       errCode: error?.code,
       errMessage: getProbeErrorMessage(error),
+      causeCode: error?.cause?.code,
+      causeMessage: error?.cause?.message,
+      remoteAddress,
+      proxyEnabled,
       status: response?.status,
       statusText: response?.statusText,
       responseData: stringifyProbeData(response?.data)
@@ -161,6 +177,34 @@ const getProbeErrorMessage = (error: any): string => {
     return String(error.message)
   }
   return isNull(error) ? '' : stringifyProbeData(error)
+}
+
+const getProbeRemoteAddress = (request): string => {
+  const socket = request?.socket || request?.res?.socket
+  const remoteAddress = socket?.remoteAddress
+  const remotePort = socket?.remotePort
+  if (isNull(remoteAddress)) {
+    return ''
+  }
+  return isNull(remotePort) ? String(remoteAddress) : `${remoteAddress}:${remotePort}`
+}
+
+const buildProbeCurlTemplate = (requestUrl, data): string => {
+  if (isNull(requestUrl)) {
+    return ''
+  }
+  return [
+    'curl -i -X POST',
+    shellSingleQuote(String(requestUrl)),
+    "-H 'Content-Type: application/json'",
+    "-H 'Authorization: Bearer ***'",
+    '--data-raw',
+    shellSingleQuote(JSON.stringify(data ?? {}))
+  ].join(' ')
+}
+
+const shellSingleQuote = (value: string): string => {
+  return "'" + value.replace(/'/g, "'\\''") + "'"
 }
 
 const stringifyProbeData = (data): string => {
