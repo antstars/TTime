@@ -13,6 +13,7 @@ import StoreService from './StoreService'
 import { StoreConfigFunTypeEnum } from '../../common/enums/StoreConfigFunTypeEnum'
 import BrowserWindowConstructorOptions = Electron.BrowserWindowConstructorOptions
 import { ecDictDbClose } from './channel/interfaces/EcDictRequest'
+import { setFileLogLevel } from '../utils/log'
 
 let setWin: BrowserWindow | null = null
 let isSetWinReady = false
@@ -295,6 +296,13 @@ ipcMain.handle('always-onTop-allow-esc-status-notify', (_event, _args) => {
  */
 ipcMain.handle('win-font-size-notify', (_event, _args) => {
   GlobalWin.mainWinSend('win-font-size-notify')
+})
+
+/**
+ * 日志输出等级更新通知
+ */
+ipcMain.handle('log-level-notify', (_event, level) => {
+  setFileLogLevel(level)
 })
 
 /**

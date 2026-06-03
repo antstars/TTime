@@ -5,7 +5,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import { GlobalShortcutEvent } from './service/GlobalShortcutEvent'
 import { WinEvent } from './service/Win'
 import { TrayEvent } from './service/TrayEvent'
-import log from './utils/log'
+import log, { setFileLogLevel } from './utils/log'
 import { SystemTypeEnum } from './enums/SystemTypeEnum'
 import GlobalWin from './service/GlobalWin'
 import './service/TTimeEvent'
@@ -29,6 +29,7 @@ if (!SystemTypeEnum.isMac()) {
 
 StoreService.init()
 StoreService.initConfig()
+setFileLogLevel(StoreService.configGet('logLevel'))
 
 const mainWinInfo = {
   width: StoreService.configGet('mainWinWidth'),

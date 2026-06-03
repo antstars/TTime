@@ -12,6 +12,14 @@
         <el-option label='简体中文' value='zh' />
       </el-select>
     </el-form-item>
+    <el-form-item class='none-select' label='日志输出等级'>
+      <el-select v-model='basilInfo.logLevel' @change='logLevelChange'>
+        <el-option label='debug' :value='LogLevelEnum.DEBUG' />
+        <el-option label='info' :value='LogLevelEnum.INFO' />
+        <el-option label='warn' :value='LogLevelEnum.WARN' />
+        <el-option label='error' :value='LogLevelEnum.ERROR' />
+      </el-select>
+    </el-form-item>
     <el-form-item class='none-select' label='自动启动'>
       <el-switch v-model='basilInfo.autoLaunch' @change='autoLaunchEvent' />
       <span class='form-switch-span none-select'> 开机自动启动TTime翻译 </span>
@@ -73,6 +81,7 @@ import { ThemeTypeEnum } from '../../../enums/ThemeTypeEnum'
 import TranslateShowPositionEnum from '../../../../../common/enums/TranslateShowPositionEnum'
 import { initTheme } from '../../../utils/themeUtil'
 import { cacheGet, cacheSet } from '../../../utils/cacheUtil'
+import LogLevelEnum from '../../../../../common/enums/LogLevelEnum'
 
 // 初始化主题
 const useThemeMode = initTheme()
@@ -94,6 +103,7 @@ const basilInfo = ref({
   fromTopOfWindowPercentage: cacheGet('fromTopOfWindowPercentage'),
   translateChoiceDelay: cacheGet('translateChoiceDelay'),
   winFontSize: cacheGet('winFontSize'),
+  logLevel: LogLevelEnum.normalize(cacheGet('logLevel')),
   hideTranslateInput: cacheGet('hideTranslateInput') === YesNoEnum.Y,
   hideTranslateLanguage: cacheGet('hideTranslateLanguage') === YesNoEnum.Y,
 })
@@ -145,6 +155,18 @@ const winFontSizeChange = (winFontSize): void => {
   cacheSet('winFontSize', winFontSize)
   basilInfo.value.winFontSize = winFontSize
   window.api.winFontSizeNotify()
+}
+
+/**
+ * 日志输出等级 - 事件
+ *
+ * @param logLevel 日志输出等级
+ */
+const logLevelChange = (logLevel): void => {
+  const normalizedLogLevel = LogLevelEnum.normalize(logLevel)
+  cacheSet('logLevel', normalizedLogLevel)
+  basilInfo.value.logLevel = normalizedLogLevel
+  window.api.logLevelNotify(normalizedLogLevel)
 }
 
 /**

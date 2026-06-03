@@ -22,6 +22,7 @@ declare global {
     updateConfigInfoPath
     setWinFocusEvent
     winFontSizeNotify
+    logLevelNotify
     winShowEvent
   }
 

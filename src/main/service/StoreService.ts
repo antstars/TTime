@@ -14,6 +14,7 @@ import * as fse from 'fs-extra'
 import TranslateServiceEnum from '../../common/enums/TranslateServiceEnum'
 import ServiceConfig from '../../common/class/ServiceConfig'
 import OpenAIInfo from '../../common/channel/translate/info/OpenAIInfo'
+import LogLevelEnum from '../../common/enums/LogLevelEnum'
 
 /**
  * app.getPath('userData')
@@ -169,6 +170,9 @@ class StoreService {
         userName: '',
         passWord: ''
       })
+    }
+    if (!StoreService.configHas('logLevel')) {
+      StoreService.configSet('logLevel', LogLevelEnum.getDefault())
     }
 
     // 清理已移除的自动更新配置

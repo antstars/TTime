@@ -134,6 +134,15 @@ const winFontSizeNotify = (): void => {
 }
 
 /**
+ * 日志输出等级更新通知
+ *
+ * @param level 日志输出等级
+ */
+const logLevelNotify = (level): void => {
+  ipcRenderer.invoke('log-level-notify', level)
+}
+
+/**
  * 窗口显示事件
  *
  * @param callback 回调方法 用于主进程内部触发时推送到Vue页面执行
@@ -161,6 +170,7 @@ const api = {
   updateConfigInfoPath,
   setWinFocusEvent,
   winFontSizeNotify,
+  logLevelNotify,
   winShowEvent
 }
 

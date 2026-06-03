@@ -1,8 +1,11 @@
 import path from 'path'
 import log from 'electron-log'
 import StoreService from '../service/StoreService'
+import LogLevelEnum from '../../common/enums/LogLevelEnum'
 
-log.transports.file.level = 'debug'
+type FileLogLevel = NonNullable<typeof log.transports.file.level>
+
+log.transports.file.level = LogLevelEnum.getDefault() as FileLogLevel
 // 文件最大不超过 1M
 log.transports.file.maxSize = 1048576
 // 日期样式
@@ -17,4 +20,11 @@ const dateName =
   date.getFullYear() + '-' + zeroExpand(date.getMonth() + 1) + '-' + zeroExpand(date.getDate())
 // 输出路径 : /Users/用户账号名称/Library/Application Support/time-translate/logs/年-月-日.log
 log.transports.file.resolvePath = (): string => path.join(StoreService.logsPath, dateName + '.log')
+
+export const setFileLogLevel = (level: unknown): string => {
+  const normalizedLevel = LogLevelEnum.normalize(level)
+  log.transports.file.level = normalizedLevel as FileLogLevel
+  return normalizedLevel
+}
+
 export default log
