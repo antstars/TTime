@@ -205,6 +205,15 @@ const apiUniteTranslate = (type, info): void => {
 }
 
 /**
+ * OpenAI Node侧请求探测
+ *
+ * @param probeInfo 探测请求信息
+ */
+const openAINodeRequestProbe = (probeInfo): Promise<any> => {
+  return ipcRenderer.invoke('openai-node-request-probe', probeInfo)
+}
+
+/**
  * 应用启动
  */
 const ttimeApiAppStart = (): void => {
@@ -311,6 +320,7 @@ const api = {
   winShowEvent,
   winShowByInputEvent,
   apiUniteTranslate,
+  openAINodeRequestProbe,
   ttimeApiAppStart,
   updateTranslateServiceEvent,
   updateTranslateServiceNotify,

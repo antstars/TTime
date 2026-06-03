@@ -11,12 +11,19 @@ export const commonError = (title, err): string => {
   const errCode = err?.code
   const errMessage = getErrorMessage(err)
   const response = isNull(err?.response) ? {} : err.response
+  const config = isNull(err?.config) ? {} : err.config
+  const request = isNull(err?.request) ? {} : err.request
   const errResponseStatus = response.status
   const errResponseStatusText = response.statusText
   const errResponseData = response.data
   window.api['logErrorEvent']('[' + title + '请求错误事件] - 异常响应报文 : ', {
     errCode: errCode,
     errMessage: errMessage,
+    errConfigUrl: config.url,
+    errConfigMethod: config.method,
+    errConfigTimeout: config.timeout,
+    errRequestStatus: request.status,
+    errRequestResponseURL: request.responseURL,
     errResponseStatus: errResponseStatus,
     errResponseStatusText: errResponseStatusText,
     errResponseData: stringifyErrorData(errResponseData)
@@ -46,6 +53,9 @@ export const commonError = (title, err): string => {
     msg = '连接超过15秒无响应，请检查配置的代理是否可用'
   } else if (errMessage.indexOf('getaddrinfo ENOTFOUND') !== -1) {
     msg = '找不到连接地址，请检查配置的代理是否正确'
+  } else if (errCode === 'ERR_NETWORK') {
+    msg =
+      '网络请求失败，请查看日志中的最终请求地址，并检查网络、代理、TLS证书、服务端POST支持或服务端日志'
   } else {
     msg = isNull(errResponseDataMessage) ? errMessage : errResponseDataMessage
   }

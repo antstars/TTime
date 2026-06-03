@@ -16,6 +16,7 @@ declare global {
     winShowEvent
     winShowByInputEvent
     apiUniteTranslate
+    openAINodeRequestProbe
     showMsgEvent
     updateTranslateServiceEvent
     updateTranslateServiceNotify

@@ -1,10 +1,11 @@
 import { app, dialog, ipcMain, shell } from 'electron'
+import axios from 'axios'
 import createSetWindow from './Set'
 import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import { isNull } from '../../common/utils/validate'
 import log from '../utils/log'
 import GlobalWin from './GlobalWin'
-import { injectWinAgent, normalizeAgentConfig } from '../utils/RequestUtil'
+import { injectAgent, injectWinAgent, normalizeAgentConfig } from '../utils/RequestUtil'
 import { StoreConfigFunTypeEnum } from '../../common/enums/StoreConfigFunTypeEnum'
 import StoreService from './StoreService'
 import { StoreTypeEnum } from '../../common/enums/StoreTypeEnum'
@@ -38,7 +39,7 @@ ipcMain.on('jump-to-page-event', (_event, url) => {
       return
     }
     shell.openExternal(targetUrl.toString())
-  } catch (error) {
+  } catch (error: any) {
     log.warn('[跳转页面事件] - URL格式错误 : ', url, error)
   }
 })
@@ -88,6 +89,93 @@ ipcMain.handle('agent-update-event', async (_event, agentConfig) => {
   }
   return res
 })
+
+/**
+ * OpenAI Node侧请求探测
+ */
+ipcMain.handle('openai-node-request-probe', async (_event, probeInfo) => {
+  const requestUrl = probeInfo?.requestUrl
+  const requestProtocol = probeInfo?.requestProtocol
+  const model = probeInfo?.model
+  const data = probeInfo?.data
+  const isCheckRequest = probeInfo?.isCheckRequest === true
+  const requestConfig: any = {
+    url: requestUrl,
+    method: 'post',
+    timeout: 15000,
+    data,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + probeInfo?.appKey
+    },
+    validateStatus: () => true
+  }
+  log.info('[OpenAI Node探测事件] - 请求信息 : ', {
+    requestUrl,
+    requestProtocol,
+    method: requestConfig.method,
+    model,
+    stream: data?.stream,
+    isCheckRequest
+  })
+  try {
+    await injectAgent(requestConfig)
+    const response = await axios(requestConfig)
+    const responseData = stringifyProbeData(response.data)
+    log.info('[OpenAI Node探测事件] - 响应信息 : ', {
+      requestUrl,
+      status: response.status,
+      statusText: response.statusText,
+      responseData
+    })
+    return {
+      ok: true,
+      hasHttpResponse: true,
+      status: response.status,
+      statusText: response.statusText
+    }
+  } catch (error: any) {
+    const response = error?.response
+    const hasHttpResponse = !isNull(response?.status)
+    log.error('[OpenAI Node探测事件] - 异常响应报文 : ', {
+      requestUrl,
+      errCode: error?.code,
+      errMessage: getProbeErrorMessage(error),
+      status: response?.status,
+      statusText: response?.statusText,
+      responseData: stringifyProbeData(response?.data)
+    })
+    return {
+      ok: false,
+      hasHttpResponse,
+      status: response?.status,
+      statusText: response?.statusText,
+      errCode: error?.code,
+      errMessage: getProbeErrorMessage(error)
+    }
+  }
+})
+
+const getProbeErrorMessage = (error: any): string => {
+  if (!isNull(error?.message)) {
+    return String(error.message)
+  }
+  return isNull(error) ? '' : stringifyProbeData(error)
+}
+
+const stringifyProbeData = (data): string => {
+  if (isNull(data)) {
+    return ''
+  }
+  if (typeof data !== 'object') {
+    return String(data)
+  }
+  try {
+    return JSON.stringify(data)
+  } catch {
+    return String(data)
+  }
+}
 
 /**
  * 打开目录对话框

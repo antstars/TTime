@@ -227,6 +227,46 @@ class OpenAIChannelRequest {
     return { data, quoteProcessor, requestUrl }
   }
 
+  static logRequestInfo(info, requestInfo, isCheckRequest): void {
+    window.api.logInfoEvent('[OpenAI请求事件] - 最终请求信息 : ', {
+      requestUrl: requestInfo.requestUrl,
+      requestProtocol: getOpenAIRequestProtocol(info.requestProtocol),
+      method: HttpMethodType.POST,
+      model: info.model,
+      stream: requestInfo.data?.['stream'],
+      isCheckRequest
+    })
+  }
+
+  static async runNodeRequestProbe(info, requestInfo, isCheckRequest): Promise<any> {
+    if (typeof window.api?.openAINodeRequestProbe !== 'function') {
+      return null
+    }
+    try {
+      return await window.api.openAINodeRequestProbe({
+        requestUrl: requestInfo.requestUrl,
+        requestProtocol: getOpenAIRequestProtocol(info.requestProtocol),
+        model: info.model,
+        data: requestInfo.data,
+        appKey: info.appKey,
+        isCheckRequest
+      })
+    } catch (error) {
+      window.api.logErrorEvent('[OpenAI Node探测事件] - 调用失败 : ', error)
+      return null
+    }
+  }
+
+  static expandCheckErrorByProbe(errorMsg, probeResult): string {
+    if (isNull(probeResult)) {
+      return errorMsg
+    }
+    if (probeResult.hasHttpResponse) {
+      return `${errorMsg}；Node侧探测已收到HTTP ${probeResult.status}，请查看日志`
+    }
+    return `${errorMsg}；Node侧探测也未收到HTTP响应，请检查网络、代理、TLS证书或服务端连接日志`
+  }
+
   static sendTranslateStart(info): void {
     window.api['agentApiTranslateCallback'](
       R.okD(
@@ -317,6 +357,7 @@ class OpenAIChannelRequest {
       return
     }
     const { data, quoteProcessor, requestUrl } = requestInfo
+    OpenAIChannelRequest.logRequestInfo(info, requestInfo, isCheckRequest)
     OpenAIChannelRequest.sendTranslateStart(info)
     let text = ''
     let hasError = false
@@ -410,6 +451,7 @@ class OpenAIChannelRequest {
       return
     }
     const { data, requestUrl } = requestInfo
+    OpenAIChannelRequest.logRequestInfo(info, requestInfo, isCheckRequest)
     request({
       url: requestUrl,
       method: HttpMethodType.POST,
@@ -430,10 +472,19 @@ class OpenAIChannelRequest {
         }
         window.api['agentApiTranslateCallback'](R.okD(new AgentTranslateCallbackVo(info, data)))
       },
-      (err) => {
+      async (err) => {
+        let errorMsg = commonError(TranslateServiceEnum.OPEN_AI, err)
+        if (err?.code === 'ERR_NETWORK') {
+          const probeResult = await OpenAIChannelRequest.runNodeRequestProbe(
+            info,
+            requestInfo,
+            isCheckRequest
+          )
+          errorMsg = OpenAIChannelRequest.expandCheckErrorByProbe(errorMsg, probeResult)
+        }
         OpenAIChannelRequest.sendTranslateError(
           info,
-          commonError(TranslateServiceEnum.OPEN_AI, err)
+          errorMsg
         )
       }
     )
