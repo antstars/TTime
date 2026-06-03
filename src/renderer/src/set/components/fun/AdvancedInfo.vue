@@ -150,11 +150,10 @@
 </template>
 <script setup lang="ts">
 // 翻译内容框内容
-import { h, ref } from 'vue'
+import { ref } from 'vue'
 import { YesNoEnum } from '../../../../../common/enums/YesNoEnum'
 import { PlaySpeechServiceEnum } from '../../../../../common/enums/PlaySpeechServiceEnum'
 import { cacheGet, cacheSet } from '../../../utils/cacheUtil'
-import { ElMessageBox } from 'element-plus'
 
 const basiInfo = ref({
   playSpeechService: cacheGet('playSpeechService')
@@ -258,25 +257,6 @@ const ocrWriteClipboardStatusEvent = (val): void => {
  * @param val 状态
  */
 const hoverBallStatusEvent = (val): void => {
-  if (val) {
-    ElMessageBox({
-      title: '鼠标悬浮球取词',
-      modal: false,
-      message: h('p', null, [
-        h('span', null, '开启后，操作流程：'),
-        h('br', null, []),
-        h('br', null, []),
-        h('span', null, '鼠标双击需要翻译的词 -> 浮现TTime小图标 -> 点击翻译'),
-        h('br', null, []),
-        h('br', null, []),
-        h(
-          'span',
-          null,
-          '注意：此功能目前仅支持Windows，如果使用过程中出现问题欢迎联系我们进行反馈修复'
-        )
-      ])
-    })
-  }
   hoverBallEnhanceStatusEvent(val)
   cacheSet('hoverBallStatus', val ? YesNoEnum.Y : YesNoEnum.N)
   advancedSettingInfo.value.hoverBallStatus = val
