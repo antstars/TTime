@@ -72,7 +72,11 @@ const isScreenshotEnd = ref(false)
 const translateContent = ref('')
 // 翻译输入框ref
 const translateContentInputRef = ref<any>(null)
-const emit = defineEmits(['show-result-event', 'is-result-loading-event'])
+const emit = defineEmits([
+  'show-result-event',
+  'is-result-loading-event',
+  'current-request-id-event'
+])
 
 watch(translateContent, () => {
   // 页面高度改变监听
@@ -229,6 +233,7 @@ const translateFun = (): void => {
     inputLanguage,
     resultLanguage
   })
+  emit('current-request-id-event', translateRecordVo.requestId)
   const requestList: Array<{ type: string; info: Record<string, any> }> = []
   // 遍历当前正在使用的翻译源
   for (const translateService of translateServiceMapData.values() as Iterable<any>) {

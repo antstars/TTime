@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, screen } from 'electron'
 import * as path from 'path'
-import { is } from '@electron-toolkit/utils'
+import { is } from '../utils/electronRuntime'
 import log from '../utils/log'
 import { Screenshots } from 'node-screenshots'
 import GlobalWin from './GlobalWin'
@@ -127,6 +127,8 @@ function createTextOcrWin(): void {
     webPreferences: {
       // 窗口引入预加载信息
       preload: path.join(__dirname, '../preload/textOcr.js'),
+      // Local OCR still uses Node native modules in this hidden renderer.
+      // Keep Node enabled here only, and keep the window loading local app files.
       sandbox: false,
       nodeIntegration: true,
       contextIsolation: false
@@ -200,6 +202,7 @@ class ScreenshotsSon {
       webPreferences: {
         // 窗口引入预加载信息
         preload: path.join(__dirname, '../preload/screenshot.js'),
+        contextIsolation: true,
         sandbox: false
       }
     })

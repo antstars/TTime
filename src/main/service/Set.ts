@@ -1,7 +1,7 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import * as fse from 'fs-extra'
-import { is } from '@electron-toolkit/utils'
+import { is } from '../utils/electronRuntime'
 import { GlobalShortcutEvent } from './GlobalShortcutEvent'
 import R from '../../common/class/R'
 import log from '../utils/log'
@@ -78,6 +78,7 @@ function createSetWindow(): void {
     icon: path.join(__dirname, '../../public/icon-1024x1024.png'),
     webPreferences: {
       preload: path.join(__dirname, '../preload/set.js'),
+      contextIsolation: true,
       sandbox: false
     }
   }

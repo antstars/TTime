@@ -4,7 +4,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '../css/css-light-vars.css'
 import '../css/css-dark-vars.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { Minus, Plus, Refresh } from '@element-plus/icons-vue'
 import SvgIcon from '../components/SvgIcon/index.vue'
 import 'virtual:svg-icons-register'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
@@ -27,10 +27,9 @@ try {
     )
   }
 
-  // 注册 element-plus 所有图标
-  for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-    app.component(key, component)
-  }
+  app.component('Minus', Minus)
+  app.component('Plus', Plus)
+  app.component('Refresh', Refresh)
   app.component('svg-icon', SvgIcon)
   app
     .use(ElementPlus, {

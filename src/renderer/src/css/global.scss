@@ -29,6 +29,7 @@ $input-loading-text-color: #7c7c7c;
     display: inline-flex;
     justify-content: center;
     cursor: pointer;
+    transition: background-color 160ms ease, transform 120ms ease;
 
     &.active {
       @include select-active;
@@ -41,6 +42,7 @@ $input-loading-text-color: #7c7c7c;
     &:active {
       @include select-active;
       background: $input-tools-activity-active-color;
+      transform: translateY(1px);
     }
 
     .function-tools-icon {

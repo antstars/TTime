@@ -1,13 +1,11 @@
 <template>
   <svg :class='svgClass' aria-hidden='true'>
-    {{ 'mode = ' + mode }}
     <use :xlink:href='iconName' :fill='color' />
   </svg>
 </template>
 
 <script setup lang='ts'>
 import { computed } from 'vue'
-import { initTheme } from '../../utils/themeUtil'
 
 const props = defineProps({
   iconClass: {
@@ -24,7 +22,6 @@ const props = defineProps({
   }
 })
 
-const mode = initTheme()
 const iconName = computed(() => {
   return `#icon-${props.iconClass}`
 })

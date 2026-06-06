@@ -2,7 +2,7 @@ import { uIOhook, UiohookWheelEvent } from 'uiohook-napi'
 import { app, BrowserWindow, screen } from 'electron'
 import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import path from 'path'
-import { is } from '@electron-toolkit/utils'
+import { is } from '../utils/electronRuntime'
 import GlobalWin from './GlobalWin'
 import { startUIOHook } from '../utils/uIOhookUtil'
 
@@ -37,9 +37,8 @@ function createOcrSilenceWin(): void {
     // alwaysOnTop: true,
     webPreferences: {
       preload: path.join(__dirname, '../preload/ocrSilence.js'),
-      sandbox: false,
-      // 关闭检测同源策略
-      webSecurity: false
+      contextIsolation: true,
+      sandbox: false
     }
   })
   // 禁用按下F11全屏事件

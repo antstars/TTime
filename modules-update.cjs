@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 const fs = require('fs')
 const path = require('path')
 const chalk = require('chalk')
@@ -10,11 +11,19 @@ const UPDATE_NODE_MODULES = path.resolve('./node_modules_update')
 copy(UPDATE_NODE_MODULES, NODE_MODULES)
 
 /**
+ * @returns {boolean}
+ */
+function defaultCopyFilter() {
+  return true
+}
+
+/**
  * @param {string} origin 需要复制的目录、文件
  * @param {string} target 复制到指定的目录、文件
  * @param {(origin: string, target: string) => boolean} filterFn 每次复制前，都会经过一次filterFn，若返回true，则复制。
+ * @returns {void}
  */
-function copy(origin, target, filterFn = (_origin, _target) => true) {
+function copy(origin, target, filterFn = defaultCopyFilter) {
   if (fs.statSync(origin).isDirectory()) {
     if (!fs.existsSync(target)) {
       fs.mkdirSync(target)

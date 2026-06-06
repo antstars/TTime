@@ -152,7 +152,12 @@ const getTranslateServiceBackEventName = (translateService): string => {
 
 const isCurrentTranslateServiceResponse = (res): boolean => {
   const translateServiceId = res?.data?.translateServiceId
-  return isNull(translateServiceId) || translateServiceId === props.translateService.id
+  const requestId = res?.data?.requestId
+  const serviceMatched = isNull(translateServiceId) || translateServiceId === props.translateService.id
+  const requestMatched = isNull(requestId) || isNull(currentRequestId.value)
+    ? true
+    : requestId === currentRequestId.value
+  return serviceMatched && requestMatched
 }
 
 /**
@@ -198,6 +203,7 @@ const copyCamelCaseResultStatus = ref(cacheGet('copyCamelCaseResultStatus') === 
 const copySnakeCaseResultStatus = ref(cacheGet('copySnakeCaseResultStatus') === YesNoEnum.Y)
 // 复制特殊结果显示
 const copySpecialResultShow = ref(false)
+const currentRequestId = ref('')
 
 /**
  * 显示翻译结果
@@ -358,6 +364,15 @@ const setIsResultLoading = (value): void => {
 }
 
 /**
+ * 设置当前翻译请求ID。
+ *
+ * @param value 请求ID
+ */
+const setCurrentRequestId = (value): void => {
+  currentRequestId.value = value
+}
+
+/**
  * 清空翻译结果内容事件
  */
 const clearTranslatedResultContentEvent = (): void => {
@@ -416,7 +431,8 @@ defineExpose({
   setTranslatedResultContent,
   clearTranslatedResultContentEvent,
   setShowResult,
-  setIsResultLoading
+  setIsResultLoading,
+  setCurrentRequestId
 })
 </script>
 
@@ -447,9 +463,10 @@ defineExpose({
 
     .content-translate-name {
       margin: 0 5px 0 5px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: var(--ttime-translate-name-size);
       color: var(--ttime-text-color);
+      line-height: 1.35;
     }
 
     .content-translate-loading {
@@ -460,6 +477,7 @@ defineExpose({
 
 .phonetic-layer {
   display: flex;
+  flex-wrap: wrap;
 
   .phonetic-block {
     display: flex;
@@ -468,13 +486,13 @@ defineExpose({
     .phonetic-type {
       margin-right: 5px;
       color: var(--ttime-translate-phonetic-type-color);
-      font-size: smaller;
+      font-size: 12px;
     }
 
     .phonetic {
       margin-right: 5px;
       color: var(--ttime-translate-phonetic-type-color);
-      font-size: smaller;
+      font-size: 12px;
     }
 
     .phonetic-function-play {
@@ -487,7 +505,7 @@ defineExpose({
 .explain-layer {
   .explain-title {
     color: var(--ttime-translate-explain-title-color);
-    font-size: smaller;
+    font-size: 12px;
     margin-left: 15px;
   }
 
@@ -496,12 +514,14 @@ defineExpose({
 
     .explain-type {
       color: var(--ttime-translate-explain-type-color);
-      font-size: smaller;
+      font-size: 12px;
     }
 
     .explain-content {
       color: var(--ttime-translate-explain-content-color);
-      font-size: small;
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
     }
   }
 }

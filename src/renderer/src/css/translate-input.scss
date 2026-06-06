@@ -12,9 +12,10 @@
       border: 0;
       outline: none;
       resize: none;
-      width: 98%;
+      box-sizing: border-box;
+      width: 100%;
       font-size: 14px;
-      padding: 10px 10px 1px 10px;
+      padding: 10px 10px 4px 10px;
     }
 
     .content-input-zero-padding-top {

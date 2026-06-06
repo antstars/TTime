@@ -18,6 +18,7 @@ import { getTranslateServiceMapByUse } from '../../utils/translateServiceUtil'
 const channelRefs = ref([])
 // 获取缓存中的翻译服务list
 const translateServiceMap = ref()
+const currentRequestId = ref('')
 
 /**
  * 加载翻译服务
@@ -84,6 +85,18 @@ const setIsResultLoading = (value): void => {
 }
 
 /**
+ * 设置当前翻译请求ID，用于忽略旧请求的慢响应。
+ *
+ * @param value 请求ID
+ */
+const setCurrentRequestId = (value): void => {
+  currentRequestId.value = value
+  channelRefs.value.forEach((channel) => {
+    channel.setCurrentRequestId(value)
+  })
+}
+
+/**
  * 清空翻译结果内容事件
  */
 const clearTranslatedResultContentEvent = (): void => {
@@ -96,7 +109,8 @@ defineExpose({
   setTranslatedResultContent,
   clearTranslatedResultContentEvent,
   setShowResult,
-  setIsResultLoading
+  setIsResultLoading,
+  setCurrentRequestId
 })
 </script>
 

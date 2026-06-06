@@ -2,7 +2,7 @@ import path from 'path'
 import { electronAPI } from '@electron-toolkit/preload'
 import { EnvEnum } from '../main/enums/EnvEnum'
 
-const cv = require('opencv.js')
+const cv = require('@techstark/opencv-js')
 const ort = require('onnxruntime-node')
 const fs = require('fs')
 const WordsNinjaPack = require('wordsninja')

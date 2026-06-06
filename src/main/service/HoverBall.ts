@@ -4,7 +4,7 @@ import { GlobalShortcutEvent } from './GlobalShortcutEvent'
 import { app, BrowserWindow, ipcMain, screen } from 'electron'
 import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import path from 'path'
-import { is } from '@electron-toolkit/utils'
+import { is } from '../utils/electronRuntime'
 import GlobalWin from './GlobalWin'
 import { YesNoEnum } from '../../common/enums/YesNoEnum'
 import { spawn } from 'child_process'
@@ -50,9 +50,8 @@ if (!SystemTypeEnum.isMac()) {
       alwaysOnTop: true,
       webPreferences: {
         preload: path.join(__dirname, '../preload/hoverBall.js'),
-        sandbox: false,
-        // 关闭检测同源策略
-        webSecurity: false
+        contextIsolation: true,
+        sandbox: false
       }
     })
     // 禁用按下F11全屏事件

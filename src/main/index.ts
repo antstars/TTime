@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import type { Rectangle } from 'electron'
 import * as path from 'path'
-import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { electronApp, is, optimizer } from './utils/electronRuntime'
 import { GlobalShortcutEvent } from './service/GlobalShortcutEvent'
 import { WinEvent } from './service/Win'
 import { TrayEvent } from './service/TrayEvent'
@@ -105,9 +105,8 @@ async function createWindow(): Promise<void> {
       : {}),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
-      sandbox: false,
-      // 关闭检测同源策略
-      webSecurity: false
+      contextIsolation: true,
+      sandbox: false
     }
   })
   log.debug('[主窗口] BrowserWindow 创建完成, ID: ', mainWin.id)

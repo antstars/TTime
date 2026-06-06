@@ -6,6 +6,7 @@
         ref='translateInput'
         @show-result-event='(value) => translatedResultInput.setShowResult(value)'
         @is-result-loading-event='(value) => translatedResultInput.setIsResultLoading(value)'
+        @current-request-id-event='(value) => translatedResultInput.setCurrentRequestId(value)'
         v-show='!hideTranslateInput'
       />
 
@@ -128,14 +129,16 @@ window.api.showMsgEvent((type, msg) => {
   margin-right: 10px;
   border-radius: 8px;
   background-color: var(--ttime-translate-color-background);
-  box-shadow: 1px 1px 4px -1px var(--ttime-box-shadow-color);
+  box-shadow: 0 8px 24px -18px var(--ttime-box-shadow-color);
   border: solid 1px var(--ttime-translate-border-color);
+  overflow: hidden;
 }
 
 .block-layer {
   overflow: auto;
-  max-height: 671px;
+  max-height: min(671px, calc(100vh - 52px));
   overflow-x: hidden;
+  padding: 2px 0 6px;
 }
 
 .block-layer::-webkit-scrollbar {
@@ -147,7 +150,7 @@ window.api.showMsgEvent((type, msg) => {
   border-radius: 3px;
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
-  background-color: #c3c3c3;
+  background-color: var(--ttime-translate-border-color);
 }
 
 .block-layer::-webkit-scrollbar-track {

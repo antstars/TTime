@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron'
 import path from 'path'
-import { is } from '@electron-toolkit/utils'
+import { is } from '../utils/electronRuntime'
 import GlobalWin from './GlobalWin'
 
 // 窗口加载完毕后执行
@@ -36,9 +36,8 @@ function createOcrWin(): void {
       : {}),
     webPreferences: {
       preload: path.join(__dirname, '../preload/ocr.js'),
-      sandbox: false,
-      // 关闭检测同源策略
-      webSecurity: false
+      contextIsolation: true,
+      sandbox: false
     }
   })
   // 禁用按下F11全屏事件
