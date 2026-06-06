@@ -1,5 +1,5 @@
 import { uIOhook, UiohookWheelEvent } from 'uiohook-napi'
-import { app, BrowserWindow, screen } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import { SystemTypeEnum } from '../enums/SystemTypeEnum'
 import path from 'path'
 import { is } from '../utils/electronRuntime'
@@ -43,6 +43,7 @@ function createOcrSilenceWin(): void {
   })
   // 禁用按下F11全屏事件
   ocrSilenceWin.setFullScreenable(false)
+  ocrSilenceWin.setIgnoreMouseEvents(true, { forward: true })
 
   // 打开开发者工具
   // ocrSilenceWin.webContents.openDevTools({ mode: 'detach' })
@@ -73,16 +74,6 @@ uIOhook.on('wheel', (_e: UiohookWheelEvent) => {
  */
 uIOhook.on('mousemove', () => {
   if (GlobalWin.isOcrSilence) {
-    GlobalWin.ocrSilenceWin.webContents
-      .executeJavaScript('JSON.stringify({width:screen.width,height: screen.height})')
-      .then((value) => {
-        const res = JSON.parse(value)
-        const width = res.width
-        const height = res.height
-        // 获取到鼠标的横坐标和纵坐标
-        const { x, y } = screen.getCursorScreenPoint()
-        // 设置坐标的同时设置宽高 否则在多显示器且显示器之间缩放比例不一致的情况下来回切换会导致加载窗口显示错位
-        GlobalWin.ocrSilenceWin.setBounds({ x: x, y: y + 11, width: width, height: height })
-      })
+    GlobalWin.updateOcrSilenceWinBounds()
   }
 })

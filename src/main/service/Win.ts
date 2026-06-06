@@ -7,6 +7,9 @@ import log from '../utils/log'
 import { EnvEnum } from '../enums/EnvEnum'
 import GlobalWin from './GlobalWin'
 
+const mainWinMinWidth = 450
+const mainWinMinHeight = 1
+
 class WinEvent {
   static mainWinInfo
 
@@ -172,7 +175,7 @@ class WinEvent {
    */
   static updateWinSize(win, width, height): void {
     // win.setMaximumSize(width, height)
-    win.setMinimumSize(450, height)
+    win.setMinimumSize(mainWinMinWidth, mainWinMinHeight)
     win.setSize(width, height)
     // Electron 在Win系统环境中当设置了缩放比例后，部分电脑在设置大小时会与设置的原始大小不一致
     // 例如：设置 500 的宽度，但实际会设置变成 501

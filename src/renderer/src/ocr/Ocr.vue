@@ -60,9 +60,9 @@ window.api.winSizeUpdate((newBounds) => {
   margin-left: 10px;
   margin-right: 10px;
   border-radius: 8px;
-  background-color: var(--ttime-translate-color-background);
-  box-shadow: 1px 1px 4px -1px var(--ttime-box-shadow-color);
-  border: solid 1px var(--ttime-translate-border-color);
+  background-color: var(--ttime-translate-color-background, #ffffff);
+  box-shadow: 1px 1px 4px -1px var(--ttime-box-shadow-color, rgba(0, 0, 0, 0.24));
+  border: solid 1px var(--ttime-translate-border-color, #cdcdcd);
 
   .block-layer {
     min-width: 789px;
@@ -70,7 +70,7 @@ window.api.winSizeUpdate((newBounds) => {
     .content-layer {
       height: 100%;
       border-radius: 7px;
-      background-color: var(--ttime-translate-input-color-background);
+      background-color: var(--ttime-translate-input-color-background, #e5e5e5);
       overflow: hidden;
       margin: 0 14px 14px 14px;
       max-width: 789px;

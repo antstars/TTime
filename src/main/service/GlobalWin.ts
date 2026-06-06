@@ -14,6 +14,9 @@ import createSetWindow from './Set'
 
 const HOVER_BALL_WIN_SIZE = 30
 const HOVER_BALL_OFFSET_Y = 11
+const OCR_SILENCE_WIN_WIDTH = 35
+const OCR_SILENCE_WIN_HEIGHT = 25
+const OCR_SILENCE_OFFSET_Y = 11
 
 /**
  * 全局窗口
@@ -436,8 +439,34 @@ class GlobalWin {
     }
     // console.log('隐藏OCR静默窗口')
     GlobalWin.isOcrSilence = false
+    GlobalWin.updateOcrSilenceWinBounds()
     GlobalWin.ocrSilenceWin.hide()
     GlobalWin.ocrSilenceWin.webContents.send('ocr-silence-hide-events')
+  }
+
+  static updateOcrSilenceWinBounds(): void {
+    if (isNull(GlobalWin.ocrSilenceWin)) {
+      return
+    }
+    if (GlobalWin.ocrSilenceWin.isDestroyed()) {
+      return
+    }
+    const currentMousePosition = screen.getCursorScreenPoint()
+    const display = screen.getDisplayNearestPoint(currentMousePosition)
+    const bounds = display.bounds
+    const maxX = bounds.x + bounds.width - OCR_SILENCE_WIN_WIDTH
+    const maxY = bounds.y + bounds.height - OCR_SILENCE_WIN_HEIGHT
+    const x = Math.min(Math.max(Math.floor(currentMousePosition.x), bounds.x), maxX)
+    const y = Math.min(
+      Math.max(Math.floor(currentMousePosition.y + OCR_SILENCE_OFFSET_Y), bounds.y),
+      maxY
+    )
+    GlobalWin.ocrSilenceWin.setBounds({
+      x,
+      y,
+      width: OCR_SILENCE_WIN_WIDTH,
+      height: OCR_SILENCE_WIN_HEIGHT
+    })
   }
 
   /**
@@ -449,6 +478,7 @@ class GlobalWin {
     }
     // console.log('显示OCR静默窗口')
     GlobalWin.isOcrSilence = true
+    GlobalWin.updateOcrSilenceWinBounds()
     GlobalWin.ocrSilenceWin.setAlwaysOnTop(true, 'pop-up-menu', 1)
     GlobalWin.ocrSilenceWin.setVisibleOnAllWorkspaces(true)
     if (SystemTypeEnum.isMac()) {
@@ -456,18 +486,7 @@ class GlobalWin {
     } else {
       GlobalWin.ocrSilenceWin.showInactive()
     }
-    GlobalWin.ocrSilenceWin.webContents
-      .executeJavaScript('JSON.stringify({width:screen.width,height: screen.height})')
-      .then((value) => {
-        const res = JSON.parse(value)
-        const width = res.width
-        const height = res.height
-        // 获取到鼠标的横坐标和纵坐标
-        const { x, y } = screen.getCursorScreenPoint()
-        // 设置坐标的同时设置宽高 否则在多显示器且显示器之间缩放比例不一致的情况下来回切换会导致悬浮球显示错位
-        GlobalWin.ocrSilenceWin.setBounds({ x: x, y: y + 11, width: width, height: height })
-        GlobalWin.ocrSilenceWin.webContents.send('ocr-silence-show-events')
-      })
+    GlobalWin.ocrSilenceWin.webContents.send('ocr-silence-show-events')
   }
 
   /**

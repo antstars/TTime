@@ -3,9 +3,21 @@ import { electronAPI } from '@electron-toolkit/preload'
 import common from './common'
 import TranslateServiceEnum from '../common/enums/TranslateServiceEnum'
 
-let windowHeightList = []
+let windowHeightList: number[] = []
 let windowHeightEventStatue = false
 let windowHeightIntervalEvent
+const windowHeightExtraPadding = 5
+const maxWindowHeight = 722
+const windowHeightUpdateInterval = 250
+
+const getMainWindowContentHeight = (): number => {
+  const blockElement = document.querySelector('.block')
+  if (blockElement instanceof HTMLElement) {
+    const blockRect = blockElement.getBoundingClientRect()
+    return Math.ceil(blockRect.top + blockRect.height + windowHeightExtraPadding)
+  }
+  return document.getElementsByTagName('html')[0].offsetHeight + windowHeightExtraPadding
+}
 
 // 停止设置窗口高度事件
 const stopWindowHeightEvent = (): void => {
@@ -34,31 +46,27 @@ const windowHeightEvent = (): void => {
     }
     // 触发执行了的情况下重置停止定时执行器事件
     zeroRunCount = 0
-    // 获取到需要设置的窗口大小中最大的值
-    const preScrollHeight = windowHeightList[windowHeightList.length - 1] + 5
+    const preScrollHeight = windowHeightList[windowHeightList.length - 1]
     // 清空列表
     windowHeightList = []
     // console.log("设置窗口大小 = ", preScrollHeight);
     ipcRenderer.invoke('window-height-change-event', preScrollHeight)
-  }, 2000)
+  }, windowHeightUpdateInterval)
 }
 
 // 监听页面高度变化
 const pageHeightChangeEvent = (): void => {
-  const targetNode = document.scrollingElement
+  const targetNode = document.querySelector('.block') || document.scrollingElement
   if (null == targetNode) {
     return
   }
   // 观察器的配置（需要观察什么变动）
   const config = { attributes: true, childList: true, subtree: true }
-  // @ts-ignore document 中存在的参数信息
-  let preScrollHeight = targetNode.offsetHeight
+  let preScrollHeight = getMainWindowContentHeight()
   // 当观察到变动时执行的回调函数
   // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
   const callback = (_mutationsList, _observer) => {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const scrollHeight = targetNode.offsetHeight
+    const scrollHeight = getMainWindowContentHeight()
     if (scrollHeight === preScrollHeight) {
       return
     }
@@ -66,8 +74,6 @@ const pageHeightChangeEvent = (): void => {
     preScrollHeight = scrollHeight
     // console.log("监听页面高度变化 preScrollHeight = ", preScrollHeight);
     windowHeightList = []
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     windowHeightList.push(preScrollHeight)
     setTimeout(() => {
       stopWindowHeightEvent()
@@ -84,7 +90,7 @@ const pageHeightChangeEvent = (): void => {
  * 窗口高度更新为最大
  */
 const windowHeightChangeMaxEvent = (): void => {
-  ipcRenderer.invoke('window-height-change-event', 722)
+  ipcRenderer.invoke('window-height-change-event', maxWindowHeight)
 }
 
 /**
@@ -93,10 +99,7 @@ const windowHeightChangeMaxEvent = (): void => {
 const windowHeightChangeEvent = (): void => {
   // 延迟执行 防止获取页面高度还未更新就执行了更新窗口大小
   setTimeout(() => {
-    ipcRenderer.invoke(
-      'window-height-change-event',
-      document.getElementsByTagName('html')[0].offsetHeight + 5
-    )
+    ipcRenderer.invoke('window-height-change-event', getMainWindowContentHeight())
   }, 251)
 }
 
