@@ -184,7 +184,7 @@ function getRectMetrics(rect): RectMetrics | null {
   }
 }
 
-function mergeRecognizedItemsIntoLines(items): Array<{ text: string; mean: number }> {
+function mergeRecognizedItemsIntoLines(items: RecognizedItem[]): Array<{ text: string; mean: number }> {
   const textItems = items.filter((item) => (item?.text ?? '').trim().length > 0)
   const fallbackLines = textItems.map((item) => {
     return { text: item.text.trim(), mean: item.mean }
@@ -192,10 +192,16 @@ function mergeRecognizedItemsIntoLines(items): Array<{ text: string; mean: numbe
   const validItems = textItems.filter(isRecognizedLineCandidate)
 
   if (validItems.length === 0 || validItems.length / textItems.length < 0.6) {
-    return mergePathologicalSingleCharLines(fallbackLines)
+    // Without box metrics, preserve line boundaries instead of guessing a cross-line merge.
+    const shouldAllowCrossLineMerge =
+      validItems.length > 0 &&
+      validItems.length / textItems.length > 0.5 &&
+      hasLikelyFragmentedHorizontalLine(clusterRecognizedItemsByRows(validItems))
+    return mergePathologicalSingleCharLines(fallbackLines, shouldAllowCrossLineMerge)
   }
 
   const rows = clusterRecognizedItemsByRows(validItems)
+  const shouldAllowCrossLineMerge = hasLikelyFragmentedHorizontalLine(rows)
   const mergedLines = rows
     .sort((a, b) => a.top - b.top)
     .flatMap((row) => {
@@ -208,7 +214,10 @@ function mergeRecognizedItemsIntoLines(items): Array<{ text: string; mean: numbe
       return { text: item.text.trim(), mean: item.mean }
     })
 
-  return mergePathologicalSingleCharLines([...mergedLines, ...invalidLines])
+  return mergePathologicalSingleCharLines(
+    [...mergedLines, ...invalidLines],
+    shouldAllowCrossLineMerge
+  )
 }
 
 function isRecognizedLineCandidate(item: RecognizedItem): boolean {
@@ -337,9 +346,86 @@ function shouldMergeRecognizedRow(rowItems: RecognizedItem[]): boolean {
   return shortTextCount / textList.length >= 0.8
 }
 
+function hasLikelyFragmentedHorizontalLine(rows: RecognizedRow[]): boolean {
+  if (rows.length === 0) {
+    return false
+  }
+
+  if (rows.length === 1) {
+    // A single detected row cannot cross real line boundaries; let the short-line guard decide.
+    return true
+  }
+
+  // Heuristic thresholds for distinguishing a fragmented single horizontal line from real multi-line text.
+  const minSameBandCenterYLimit = 10
+  const sameBandAverageHeightRatio = 0.8
+  const minHorizontalSpanRatio = 3
+  const minHorizontalToVerticalSpanRatio = 1.6
+  const maxVerticalSpanHeightRatio = 2.2
+
+  const metrics = rows
+    .flatMap((row) => row.items.map((item) => item.metrics))
+    .filter((metric): metric is RectMetrics => metric !== null)
+
+  if (metrics.length <= 1) {
+    return true
+  }
+
+  const medianCenterY = getMedian(rows.map((row) => row.centerY))
+  const medianHeight = getMedian(rows.map((row) => row.averageHeight))
+  const allRowsInSameHorizontalBand = rows.every((row) => {
+    return (
+      Math.abs(row.centerY - medianCenterY) <=
+      Math.max(minSameBandCenterYLimit, medianHeight * sameBandAverageHeightRatio)
+    )
+  })
+  if (allRowsInSameHorizontalBand) {
+    return true
+  }
+
+  const left = Math.min(...metrics.map((metric) => metric.left))
+  const right = Math.max(...metrics.map((metric) => metric.right))
+  const top = Math.min(...metrics.map((metric) => metric.top))
+  const bottom = Math.max(...metrics.map((metric) => metric.bottom))
+  const xSpan = right - left
+  const ySpan = bottom - top
+  const averageHeight =
+    metrics.reduce((sum, metric) => {
+      return sum + metric.height
+    }, 0) / metrics.length
+  const averageWidth =
+    metrics.reduce((sum, metric) => {
+      return sum + metric.width
+    }, 0) / metrics.length
+
+  return (
+    xSpan >
+      Math.max(averageWidth * minHorizontalSpanRatio, ySpan * minHorizontalToVerticalSpanRatio) &&
+    ySpan <= averageHeight * maxVerticalSpanHeightRatio
+  )
+}
+
+function getMedian(values: number[]): number {
+  if (values.length === 0) {
+    return 0
+  }
+
+  const sortedValues = values.slice().sort((a, b) => a - b)
+  const mid = Math.floor(sortedValues.length / 2)
+  if (sortedValues.length % 2 === 0) {
+    return (sortedValues[mid - 1] + sortedValues[mid]) / 2
+  }
+  return sortedValues[mid]
+}
+
 function mergePathologicalSingleCharLines(
-  lines: Array<{ text: string; mean: number }>
+  lines: Array<{ text: string; mean: number }>,
+  allowMerge: boolean
 ): Array<{ text: string; mean: number }> {
+  if (!allowMerge) {
+    return lines
+  }
+
   const textLines = lines.filter((line) => (line?.text ?? '').trim().length > 0)
   if (textLines.length <= 1) {
     return lines
