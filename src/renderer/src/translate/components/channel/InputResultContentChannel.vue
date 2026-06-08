@@ -205,6 +205,14 @@ const copySnakeCaseResultStatus = ref(cacheGet('copySnakeCaseResultStatus') === 
 const copySpecialResultShow = ref(false)
 const currentRequestId = ref('')
 
+const syncWindowHeight = (): void => {
+  nextTick(() => {
+    setTimeout(() => {
+      window.api.windowHeightChangeEvent()
+    }, 120)
+  })
+}
+
 /**
  * 显示翻译结果
  */
@@ -214,6 +222,7 @@ const showResultFun = (): void => {
     return
   }
   showResult.value = !showResult.value
+  syncWindowHeight()
 }
 
 /**
@@ -280,6 +289,7 @@ window.api[getTranslateServiceBackEventName(props.translateService)]((res) => {
       updateTranslateRecord(data)
       // 在流式翻译结束后重新计算翻译结果容器高度
       adjustTextareaHeight()
+      syncWindowHeight()
       return
     }
     translatedResultContent.value += translatedResultContentTemp
@@ -333,6 +343,7 @@ window.api[getTranslateServiceBackEventName(props.translateService)]((res) => {
     wfsList: data['wfs'],
     explainList: explainListDeal
   }
+  syncWindowHeight()
 })
 
 /**
@@ -343,6 +354,7 @@ window.api[getTranslateServiceBackEventName(props.translateService)]((res) => {
 const setTranslatedResultContent = (value): void => {
   translatedResultContent.value = value
   adjustTextareaHeight()
+  syncWindowHeight()
 }
 
 /**
@@ -351,7 +363,11 @@ const setTranslatedResultContent = (value): void => {
  * @param value 显示翻译结果
  */
 const setShowResult = (value): void => {
+  const preShowResult = showResult.value
   showResult.value = value
+  if (preShowResult !== value) {
+    syncWindowHeight()
+  }
 }
 
 /**
@@ -425,6 +441,7 @@ const isStreamTranslateService = (): boolean => {
  */
 window.api.winSizeUpdate(() => {
   adjustTextareaHeight()
+  syncWindowHeight()
 })
 
 defineExpose({

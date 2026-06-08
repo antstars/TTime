@@ -125,6 +125,8 @@ window.api.showMsgEvent((type, msg) => {
 @use '../css/translate-input.scss' as *;
 
 .block {
+  display: flex;
+  flex-direction: column;
   margin-left: 10px;
   margin-right: 10px;
   border-radius: 8px;
@@ -135,10 +137,13 @@ window.api.showMsgEvent((type, msg) => {
 }
 
 .block-layer {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
   max-height: min(671px, calc(100vh - 52px));
   overflow-x: hidden;
-  padding: 2px 0 6px;
+  padding: 2px 0 12px;
+  box-sizing: border-box;
 }
 
 .block-layer::-webkit-scrollbar {

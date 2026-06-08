@@ -10,13 +10,47 @@ const windowHeightExtraPadding = 5
 const maxWindowHeight = 722
 const windowHeightUpdateInterval = 250
 
+const clampMainWindowHeight = (height: number): number => {
+  return Math.min(Math.ceil(height), maxWindowHeight)
+}
+
+const getVerticalMargin = (element: HTMLElement): number => {
+  const style = window.getComputedStyle(element)
+  return parseFloat(style.marginTop || '0') + parseFloat(style.marginBottom || '0')
+}
+
+const getVerticalBorder = (element: HTMLElement): number => {
+  const style = window.getComputedStyle(element)
+  return parseFloat(style.borderTopWidth || '0') + parseFloat(style.borderBottomWidth || '0')
+}
+
+const getOuterHeight = (element: HTMLElement): number => {
+  return element.getBoundingClientRect().height + getVerticalMargin(element)
+}
+
 const getMainWindowContentHeight = (): number => {
   const blockElement = document.querySelector('.block')
   if (blockElement instanceof HTMLElement) {
     const blockRect = blockElement.getBoundingClientRect()
-    return Math.ceil(blockRect.top + blockRect.height + windowHeightExtraPadding)
+    const headerElement = blockElement.querySelector('.header')
+    const blockLayerElement = blockElement.querySelector('.block-layer')
+
+    if (headerElement instanceof HTMLElement && blockLayerElement instanceof HTMLElement) {
+      const contentHeight =
+        blockRect.top +
+        getVerticalBorder(blockElement) +
+        getOuterHeight(headerElement) +
+        blockLayerElement.scrollHeight +
+        windowHeightExtraPadding
+
+      return clampMainWindowHeight(contentHeight)
+    }
+
+    return clampMainWindowHeight(blockRect.top + blockRect.height + windowHeightExtraPadding)
   }
-  return document.getElementsByTagName('html')[0].offsetHeight + windowHeightExtraPadding
+  return clampMainWindowHeight(
+    document.getElementsByTagName('html')[0].offsetHeight + windowHeightExtraPadding
+  )
 }
 
 // 停止设置窗口高度事件
