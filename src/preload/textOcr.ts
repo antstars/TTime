@@ -53,6 +53,34 @@ const limitSideLen = 960,
   imgH = 48
 let imgW = 320
 
+type RectMetrics = {
+  left: number
+  right: number
+  top: number
+  bottom: number
+  width: number
+  height: number
+  centerY: number
+}
+
+type RecognizedItem = {
+  text: string
+  mean: number
+  rect: any
+  metrics: RectMetrics | null
+}
+
+type LineMetrics = {
+  top: number
+  bottom: number
+  averageHeight: number
+  centerY: number
+}
+
+type RecognizedRow = LineMetrics & {
+  items: RecognizedItem[]
+}
+
 /**
  * 初始化
  *
@@ -93,16 +121,17 @@ async function ocr(img): Promise<string> {
   // 检测后
   // @ts-ignore 忽略校验
   const box = testAfter(detResults.data, detResults.dims[3], detResults.dims[2], canvas)
-  let mainLine = []
+  let recognizedItems: RecognizedItem[] = []
   // 识别前
   for (const i of identifyBefore(box)) {
-    const { b, imgH, imgW } = i
+    const { b, imgH, imgW, rects } = i
     // 识别
     const recResults = await identify(b, imgH, imgW, rec)
     // 识别后
     const line = identifyAfter(recResults, dict)
-    mainLine = line.concat(mainLine)
+    recognizedItems = buildRecognizedItems(line, rects).concat(recognizedItems)
   }
+  const mainLine = mergeRecognizedItemsIntoLines(recognizedItems)
   let returnText = ''
   for (const info of mainLine) {
     // @ts-ignore 忽略校验
@@ -110,6 +139,224 @@ async function ocr(img): Promise<string> {
   }
   // @ts-ignore 忽略校验
   return returnText
+}
+
+function buildRecognizedItems(line, rects): RecognizedItem[] {
+  if (!Array.isArray(line)) {
+    return []
+  }
+  return line.map((info, index) => {
+    const rect = Array.isArray(rects) ? rects[index] : null
+    return {
+      text: info?.text ?? '',
+      mean: info?.mean ?? 0,
+      rect,
+      metrics: getRectMetrics(rect)
+    }
+  })
+}
+
+function getRectMetrics(rect): RectMetrics | null {
+  if (!rect?.box || !Array.isArray(rect.box)) {
+    return null
+  }
+  const xs = rect.box.map((point) => point[0])
+  const ys = rect.box.map((point) => point[1])
+  const left = Math.min(...xs)
+  const right = Math.max(...xs)
+  const top = Math.min(...ys)
+  const bottom = Math.max(...ys)
+  const width = right - left
+  const height = bottom - top
+
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return null
+  }
+
+  return {
+    left,
+    right,
+    top,
+    bottom,
+    width,
+    height,
+    centerY: (top + bottom) / 2
+  }
+}
+
+function mergeRecognizedItemsIntoLines(items): Array<{ text: string; mean: number }> {
+  const textItems = items.filter((item) => (item?.text ?? '').trim().length > 0)
+  const fallbackLines = textItems.map((item) => {
+    return { text: item.text.trim(), mean: item.mean }
+  })
+  const validItems = textItems.filter(isRecognizedLineCandidate)
+
+  if (validItems.length === 0 || validItems.length / textItems.length < 0.6) {
+    return mergePathologicalSingleCharLines(fallbackLines)
+  }
+
+  const rows = clusterRecognizedItemsByRows(validItems)
+  const mergedLines = rows
+    .sort((a, b) => a.top - b.top)
+    .flatMap((row) => {
+      return mergeRecognizedRow(row.items)
+    })
+
+  const invalidLines = textItems
+    .filter((item) => !isRecognizedLineCandidate(item))
+    .map((item) => {
+      return { text: item.text.trim(), mean: item.mean }
+    })
+
+  return mergePathologicalSingleCharLines([...mergedLines, ...invalidLines])
+}
+
+function isRecognizedLineCandidate(item: RecognizedItem): boolean {
+  return (item?.text ?? '').trim().length > 0 && item?.metrics !== null
+}
+
+function clusterRecognizedItemsByRows(items: RecognizedItem[]): RecognizedRow[] {
+  const rows: RecognizedRow[] = []
+  const sortedItems = items.slice().sort((a, b) => {
+    return (a.metrics?.top ?? 0) - (b.metrics?.top ?? 0)
+  })
+
+  for (const item of sortedItems) {
+    const row = findMatchedRow(rows, item)
+    if (row === null) {
+      rows.push(buildRecognizedRow([item]))
+    } else {
+      row.items.push(item)
+      updateRecognizedRowMetrics(row)
+    }
+  }
+
+  return rows
+}
+
+function findMatchedRow(rows: RecognizedRow[], item: RecognizedItem): RecognizedRow | null {
+  if (item.metrics === null) {
+    return null
+  }
+
+  let matchedRow: RecognizedRow | null = null
+  let matchedScore = Number.POSITIVE_INFINITY
+  for (const row of rows) {
+    const centerYDiff = Math.abs(item.metrics.centerY - row.centerY)
+    const centerYLimit = Math.max(10, row.averageHeight * 0.8)
+    const overlap = Math.min(row.bottom, item.metrics.bottom) - Math.max(row.top, item.metrics.top)
+    const overlapRatio = overlap / Math.min(row.averageHeight, item.metrics.height)
+
+    if ((overlapRatio >= 0.45 || centerYDiff <= centerYLimit) && centerYDiff < matchedScore) {
+      matchedRow = row
+      matchedScore = centerYDiff
+    }
+  }
+
+  return matchedRow
+}
+
+function buildRecognizedRow(items: RecognizedItem[]): RecognizedRow {
+  const metrics = buildLineMetrics(items)
+  return {
+    items,
+    top: metrics.top,
+    bottom: metrics.bottom,
+    averageHeight: metrics.averageHeight,
+    centerY: metrics.centerY
+  }
+}
+
+function updateRecognizedRowMetrics(row: RecognizedRow): void {
+  const metrics = buildLineMetrics(row.items)
+  row.top = metrics.top
+  row.bottom = metrics.bottom
+  row.averageHeight = metrics.averageHeight
+  row.centerY = metrics.centerY
+}
+
+function buildLineMetrics(lineItems: RecognizedItem[]): LineMetrics {
+  const metrics = lineItems
+    .map((item) => item.metrics)
+    .filter((metric): metric is RectMetrics => metric !== null)
+
+  const top = Math.min(...metrics.map((metric) => metric.top))
+  const bottom = Math.max(...metrics.map((metric) => metric.bottom))
+  const averageHeight =
+    metrics.reduce((sum, metric) => {
+      return sum + metric.height
+    }, 0) / metrics.length
+  const centerY =
+    metrics.reduce((sum, metric) => {
+      return sum + metric.centerY
+    }, 0) / metrics.length
+
+  return {
+    top,
+    bottom,
+    averageHeight,
+    centerY
+  }
+}
+
+function mergeRecognizedRow(rowItems: RecognizedItem[]): Array<{ text: string; mean: number }> {
+  if (!shouldMergeRecognizedRow(rowItems)) {
+    return rowItems
+      .slice()
+      .sort((a, b) => {
+        return (a.metrics?.left ?? 0) - (b.metrics?.left ?? 0)
+      })
+      .map((item) => {
+        return { text: item.text.trim(), mean: item.mean }
+      })
+  }
+
+  const sortedRowItems = rowItems.slice().sort((a, b) => {
+    return (a.metrics?.left ?? 0) - (b.metrics?.left ?? 0)
+  })
+  const text = sortedRowItems.map((item) => item.text.trim()).join('')
+  const mean =
+    sortedRowItems.reduce((sum, item) => {
+      return sum + (Number.isFinite(item.mean) ? item.mean : 0)
+    }, 0) / sortedRowItems.length
+
+  return [{ text, mean }]
+}
+
+function shouldMergeRecognizedRow(rowItems: RecognizedItem[]): boolean {
+  if (rowItems.length <= 1) {
+    return false
+  }
+
+  const textList = rowItems.map((item) => item.text.trim()).filter((text) => text.length > 0)
+  if (textList.length !== rowItems.length) {
+    return false
+  }
+
+  const shortTextCount = textList.filter((text) => Array.from(text).length <= 2).length
+  return shortTextCount / textList.length >= 0.8
+}
+
+function mergePathologicalSingleCharLines(
+  lines: Array<{ text: string; mean: number }>
+): Array<{ text: string; mean: number }> {
+  const textLines = lines.filter((line) => (line?.text ?? '').trim().length > 0)
+  if (textLines.length <= 1) {
+    return lines
+  }
+
+  const shortLineCount = textLines.filter((line) => Array.from(line.text.trim()).length <= 2).length
+  if (shortLineCount / textLines.length < 0.8) {
+    return lines
+  }
+
+  const text = textLines.map((line) => line.text.trim()).join('')
+  const mean =
+    textLines.reduce((sum, line) => {
+      return sum + (Number.isFinite(line.mean) ? line.mean : 0)
+    }, 0) / textLines.length
+
+  return [{ text, mean }]
 }
 
 function testBefore(imaHeight, imgWidth, img): object {
@@ -328,8 +575,10 @@ function identifyBefore(box): [] {
       // @ts-ignore 忽略校验
       b.push(toPaddleInput(resizeNormImg(r.img), [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]))
     }
+    // identifyAfter returns recognition results in reverse batch order.
+    // Keep the rectangles aligned with that output before layout checks.
     // @ts-ignore 忽略校验
-    l.push({ b, imgH, imgW })
+    l.push({ b, imgH, imgW, rects: box.slice().reverse() })
   }
   // @ts-ignore 忽略校验
   return l
